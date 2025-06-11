@@ -1,0 +1,29 @@
+﻿
+<nav class="navbar navbar-expand-sm navbar-light bg-light mb-3">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">MyApp</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Employees" asp-action="Index">Çalışanlar</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Employees" asp-action="Create">Kayıt Ekle</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Reports" asp-action="Index">Raporlar</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

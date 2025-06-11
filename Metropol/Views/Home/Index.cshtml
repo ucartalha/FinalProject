@@ -1,0 +1,881 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-90680653-2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-90680653-2');
+    </script>
+
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+    <meta name="description" content="Responsive Bootstrap 4 Dashboard Template">
+    <meta name="author" content="BootstrapDash">
+
+    <title>Azia Responsive Bootstrap 4 Dashboard Template</title>
+
+    <!-- vendor css -->
+    <link href="../lib/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="../lib/ionicons/css/ionicons.min.css" rel="stylesheet">
+    <link href="../lib/typicons.font/typicons.css" rel="stylesheet">
+    <link href="../lib/flag-icon-css/css/flag-icon.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://dprd.sulselprov.go.id/web/assets/DataTables-1.10.15/media/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://dprd.sulselprov.go.id/web/assets/DataTables-1.10.15/extensions/Responsive/css/responsive.dataTables.css">
+    <!-- azia CSS -->
+    <link rel="stylesheet" href="../css/azia.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+   
+
+<!-- 
+    <script src="https://dprd.sulselprov.go.id/web/assets/DataTables-1.10.15/media/js/jquery.dataTables.js"></script> -->
+    <script src="https://dprd.sulselprov.go.id/web/assets/DataTables-1.10.15/extensions/Responsive/js/dataTables.responsive.js"></script>
+
+    <script src="../lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../lib/ionicons/ionicons.js"></script>
+    <script src="../lib/jquery.flot/jquery.flot.js"></script>
+    <script src="../lib/jquery.flot/jquery.flot.resize.js"></script>
+    <script src="../lib/chart.js/Chart.bundle.min.js"></script>
+    <script src="../lib/peity/jquery.peity.min.js"></script>
+    
+    <script src="../js/azia.js"></script>
+    <script src="../js/chart.flot.sampledata.js"></script>
+    <script src="../js/dashboard.sampledata.js"></script>
+    <script src="../js/cookie.js" type="text/javascript"></script>
+    <script src="../js/chart.chartjs.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script> -->
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+  </head>
+  <body>
+
+    <div class="az-header">
+      <div class="container">
+        <div class="az-header-left">
+          <a href="index.html" class="az-logo"><span></span> Metropol Card</a>
+          <a href="" id="azMenuShow" class="az-header-menu-icon d-lg-none"><span></span></a>
+        </div><!-- az-header-left -->
+        <div class="az-header-menu">
+          <div class="az-header-menu-header">
+            <a href="index.html" class="az-logo"><span></span> Metropol Card</a>
+            <a href="" class="close">&times;</a>
+          </div><!-- az-header-menu-header -->
+          
+        </div><!-- az-header-menu -->
+        <div class="az-header-right">
+        
+          </div><!-- az-header-message -->
+          
+          
+          </div>
+        </div><!-- az-header-right -->
+      </div><!-- container -->
+    </div><!-- az-header -->
+
+    <div class="az-content az-content-dashboard">
+      <div class="container">
+        <div class="az-content-body">
+          <div class="az-dashboard-one-title">
+            
+              
+                <div class="az-content-header-left">
+                <div class="custom-file">
+                  <input type="file" class="custom-file-input" id="fileInput">
+                  <label class="custom-file-label" for="fileInput" id="fileInputLabel">Ofis Loglarını Seçin</label>
+                  
+                </div>
+                <button id="uploadButton" class="btn btn-primary">Yükle</button>
+                </div>
+                
+              <!-- col -->
+            <!-- row -->
+            <div class="az-content-header-right">
+              <div class="media">
+                <div class="media-body">
+                 <h4>Metropol Card</h4>
+                </div><!-- media-body -->
+              </div><!-- media -->
+             
+              <div class="media">
+                <div class="custom-file">
+                  <input type="file" class="custom-file-input" id="remoteFile">
+                  <label class="custom-file-label" for="remoteFile">Uzaktan Loglarını Seçin</label>
+                </div>
+                <button id="remoteButton" class="btn btn-primary">Yükle</button>
+              </div><!-- media -->
+             
+            </div>
+          </div><!-- az-dashboard-one-title -->
+
+          
+
+          
+
+          <div class="row row-sm">
+            <div class="col-sm-8 col-md-6 col-xl-4">
+              <div class="az-content-label az-content-label-sm mg-b-15">Ofis Verileri</div>
+              <div class="ht-200 ht-lg-250"><canvas id="chartBar1"></canvas></div>
+              <div id="chart-tooltip"></div>
+            </div>
+            <!-- col-6 -->
+            <div class="col-sm-8 col-md-6 col-xl-4">
+              <div class="az-content-label az-content-label-sm mg-b-15">Ofis Verileri</div>
+              <div class="ht-200 ht-lg-250"><canvas id="chartBar2"></canvas></div>
+              <div id="chart-tooltip"></div>
+            </div>
+            
+              <div class="col-md-4">
+               
+              
+              <div class="col-md">
+                <input id="nameInput" class="form-control" placeholder="Input box" type="text">
+                <br>
+                <div class="input-group">
+                  
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">  
+                      Date:
+                    </div>
+                  </div>
+                  <input id="dateInput" type="text" class="form-control" placeholder="Ay Giriniz...">
+                  <div class="col-sm-6 col-md-4"><button id="submitButton" class="btn btn-indigo btn-rounded btn-block">Göster</button></div>
+                </div>
+              </div><!-- input-group -->
+              </div>
+          </div><!-- row -->
+
+          <div class="m-4">
+            <ul class="nav nav-tabs" id="myTab">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link active" data-bs-toggle="tab">Ofis Kayıtları</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#profile" class="nav-link" data-bs-toggle="tab">Mesai Hesaplama</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#messages" class="nav-link" data-bs-toggle="tab">Uzaktan Ve Ofis Kayıtları</a>
+                </li>
+                <li class="nav-item">
+                  <a href="#logss" class="nav-link" data-bs-toggle="tab">Uzaktan Ve Ofis Kayıtları</a>
+              </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="home">
+                  <div class="az-content-body pd-lg-l-40 d-flex flex-column">
+                  <div class="az-content-breadcrumb">
+                    <span>Çalışan Listesi</span>
+                    
+                  </div>
+      
+                    <div class="az-content-label mg-b-5">Ofis Log Listesi</div>
+                    <br>
+                  
+                    <div class="input-group">
+                      <input id="search-input" type="text" class="form-control form-control-sm" placeholder="İsim Girin...">
+                      <span class="input-group-btn">
+                        <button id="search-button" class="btn btn-primary btn-sm" type="button"><i class="fa fa-search"></i></button>
+                      </span>
+                    </div>
+                    <br>
+                    <div class="input-group">
+                      <input id="filter-input" type="text" class="form-control form-control-sm" placeholder="Filter by...">
+                      <span class="input-group-btn">
+                        <button id="filter-button" class="btn btn-primary btn-sm" type="button">Filter</button>
+                      </span>
+                    </div>
+                    <br>
+                    <table id="employee-table" class="table table-hover mg-b-0">
+                      <thead id="table-header-row">
+                        <tr>
+                          <th>ID</th>
+                          <th>Card ID</th>
+                          <th>Name</th>
+                          <th>Surname</th>
+                          <th>Department</th>
+                          <th>Blok</th>
+                          <th>Date</th>
+                          <th>First Record</th>
+                          <th>Last Record</th>
+                          <th>Working Hour</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <!-- Tablo satırları buraya eklenecek -->
+                      </tbody>
+                    </table>
+                </div>
+                    <div id="pagination"></div>
+                </div>
+
+                <div class="tab-pane fade" id="profile">
+                  <div class="az-content-body pd-lg-l-40 d-flex flex-column">
+                    <div class="az-content-breadcrumb">
+                      <span>Çalışan Listesi</span>
+                      
+                    </div>
+        
+                      <div class="az-content-label mg-b-5">OFİS MESAİ ÜCRETİ</div>
+                      <br>
+                    
+                      <div class="input-group">
+                        <input id="name-input" type="text" class="form-control form-control-sm" placeholder="İsim Girin...">
+                        <input id="date-input" type="month" class="form-control form-control-sm" placeholder="Search for...">
+
+                        <span class="input-group-btn">
+                          <button id="search-button-over" class="btn btn-primary btn-sm" type="button"><i class="fa fa-search"></i></button>
+                        </span>
+                      </div>
+                      <br>
+                      <!-- <div class="input-group">
+                        <input id="filter-input" type="text" class="form-control form-control-sm" placeholder="Filter by...">
+                        <span class="input-group-btn">
+                          <button id="filter-button" class="btn btn-primary btn-sm" type="button">Filter</button>
+                        </span>
+                      </div> -->
+                      <br>
+                      <table id="overshift-table" class="table table-hover mg-b-0">
+                        <thead id="table-header-row">
+                          <tr>
+                            <th>Name</th>
+                            <th>RemoteDate ID</th>
+                            <th>OfficeDate</th>
+                            <th>ShiftHour</th>
+                            <th>ShiftDuration</th>
+                            <th>ShiftCount</th>
+                            
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- Tablo satırları buraya eklenecek -->
+                        </tbody>
+                      </table>
+                  </div>
+                  <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                      <div id="pagination"></div>
+                    
+                </div>
+
+                <div class="tab-pane fade" id="messages">
+                    <div class="az-content-body pd-lg-l-40 d-flex flex-column">
+                    <div class="az-content-breadcrumb">
+                      <span>Çalışan Listesi</span>
+                      
+                    </div>
+        
+                      <div class="az-content-label mg-b-5">KİŞİ OFİS-UZAKTAN LOGLAR</div>
+                      <br>
+                    
+                      <div class="input-group">
+                        <input id="fname-input" type="text" class="form-control form-control-sm" placeholder="isim Girin...">
+
+                        <span class="input-group-btn">
+                          <button id="search-button-dto" class="btn btn-primary btn-sm" type="button"><i class="fa fa-search"></i></button>
+                        </span>
+                      </div>
+                      <br>
+                      <div class="input-group">
+                        <input id="filter-input-dto" type="text" class="form-control form-control-sm" placeholder="Filter by...">
+                        <span class="input-group-btn">
+                          <button id="filter-button-dto" class="btn btn-primary btn-sm" type="button">Filter</button>
+                        </span>
+                      </div>
+                      <br>
+                      <table id="dto-table" class="table table-hover mg-b-0">
+                        <thead id="table-header-row">
+                          <tr>
+                            <th>Full Name</th>
+                            <th>Duration</th>
+                            <th>WorkingHour</th>
+                            <th>OfficeDate</th>
+                            <th>RemoteDate</th>
+                            
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- Tablo satırları buraya eklenecek -->
+                        </tbody>
+                      </table>
+                  </div>
+                  <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                      <div id="pagination"></div>
+                    
+                </div>
+                 <div class="tab-pane fade" id="messages">
+                    <div class="az-content-body pd-lg-l-40 d-flex flex-column">
+                    <div class="az-content-breadcrumb">
+                      <span>Çalışan Listesi</span>
+                      
+                    </div>
+        
+                      <div class="az-content-label mg-b-5">KİŞİ OFİS-UZAKTAN LOGLAR</div>
+                      <br>
+                    
+                      <div class="input-group">
+                        <input id="fname-input" type="text" class="form-control form-control-sm" placeholder="isim Girin...">
+
+                        <span class="input-group-btn">
+                          <button id="search-button-dto" class="btn btn-primary btn-sm" type="button"><i class="fa fa-search"></i></button>
+                        </span>
+                      </div>
+                      <br>
+                      <div class="input-group">
+                        <input id="filter-input-dto" type="text" class="form-control form-control-sm" placeholder="Filter by...">
+                        <span class="input-group-btn">
+                          <button id="filter-button-dto" class="btn btn-primary btn-sm" type="button">Filter</button>
+                        </span>
+                      </div>
+                      <br>
+                      <table id="dto-table" class="table table-hover mg-b-0">
+                        <thead id="table-header-row">
+                          <tr>
+                            <th>Full Name</th>
+                            <th>Duration</th>
+                            <th>WorkingHour</th>
+                            <th>OfficeDate</th>
+                            <th>RemoteDate</th>
+                            
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- Tablo satırları buraya eklenecek -->
+                        </tbody>
+                      </table>
+                  </div>
+                  <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                      <div id="pagination"></div>
+                    
+                </div>
+                
+
+
+
+
+
+                 <div class="tab-pane fade" id="logss">
+                    <div class="az-content-body pd-lg-l-40 d-flex flex-column">
+                    <div class="az-content-breadcrumb">
+                      <span>Çalışan Listesi</span>
+                      
+                    </div>
+        
+                      <div class="az-content-label mg-b-5">Tüm Kişilerin Mesaileri</div>
+                      <br>
+                    
+                      <div class="input-group">
+                        <input id="date-input-all" type="month" class="form-control form-control-sm" placeholder="Search for...">
+
+                        <span class="input-group-btn">
+                          <button id="fetchButton" class="btn btn-primary btn-sm" type="button"><i class="fa fa-search"></i></button>
+                        </span>
+                      </div>
+                      <br>
+                      <div class="input-group">
+                        <input id="filter-input-dto" type="text" class="form-control form-control-sm" placeholder="Filter by...">
+                        <span class="input-group-btn">
+                          <button id="search-button-dto" class="btn btn-primary btn-sm" type="button">Filter</button>
+                        </span>
+                      </div>
+                      <br>
+                      <table id="example" class="display nowrap" cellspacing="0" width="100%"></table>
+                  </div>
+                  <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                      <div id="pagination"></div>
+                    
+                </div>
+            </div>
+            
+
+
+<script>
+$(document).ready(function() {
+    $('#fetchButton').on('click', function() {
+
+ // Tarih seçimi
+ const dateInput = document.getElementById('date-input-all');
+        const selectedDate = dateInput.value;
+        
+
+        // Seçilen tarihi "year" ve "month" olarak ayrıştırma
+        const year = selectedDate.split('-')[0];
+        const month = selectedDate.split('-')[1];
+      $('#example').DataTable({
+
+destroy: true,
+
+searching: true,
+
+ordering: true,
+
+pagingType: "full_numbers",
+
+deferRender: true,
+
+ajax: {
+
+    url: "http://localhost:47153/OverShift/getallovershift",
+
+    type: "GET",
+
+    data: { month: month, year : year },
+
+    dataType: "json"
+
+},
+
+columns: [
+
+    { title: "name", data: "name" },
+    { title: "shiftCount", data: "shiftCount" },
+    { title: "name", data: "name" }
+
+   
+
+],
+
+dom: 'Bfrtip',
+
+buttons: [
+
+    {
+
+        extend: 'colvis',
+
+        className: 'btn-colvis',
+
+        text: 'Kolon Filtrele',
+
+        columns: ':not(.noVis)'
+
+    },
+
+    {
+
+        extend: 'excelHtml5',
+
+        filename: 'SozlesmeListesi',
+
+        title: null,
+
+        autoFilter: true,
+
+        text: 'Rapor İndir',
+
+        exportOptions: {
+
+            columns: ':not(:first-child)'
+
+        }
+
+    }
+
+]
+
+});
+
+
+       
+//         $('#example').DataTable({
+//     "language": {
+//     "sProcessing": "İşleniyor...",
+//     "oPaginate": {
+//       "sFirst": "İlk",
+//         "sPrevious": "Önceki",
+//         "sNext": "Sonraki",
+//         "sLast": "Son"
+//       }
+//     },
+// //data: partData, //datatable da gösterilecek veri kaynağı
+// // ajax: {
+// //     url: 'http://localhost:47153/OverShift/getallovershift', //veri kaynağını almak için ajax ile gidip alıyoruz
+// //     type: 'GET',
+// //     datatype: 'json'
+// // },
+// processing: true, //işleniyor yazısı çıkması için
+// serverSide: false,//SERVER -SİDE PAGİNG İŞLEMİ YAPIYORUZ
+// columns: [
+//     { data: 'name' },
+//     { data: 'shiftCount' },
+//     { data: 'Message' }
+//   ]
+//   });
+});
+});
+
+
+          </script>
+
+
+              <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+              <script>
+                var itemsPerPage = 20; // Her sayfada gösterilecek veri sayısı
+                var currentPage = 1; // Şu anki sayfa numarası
+                var searchInput = document.getElementById("search-input");
+                var searchButton = document.getElementById("search-button");
+                var filterInput = document.getElementById("filter-input");
+                var filterButton = document.getElementById("filter-button");
+              
+                var allEmployees = []; // Tüm çalışan verilerini tutacak dizi
+                var filteredEmployees = []; // Filtrelenmiş çalışan verilerini tutacak dizi
+                var employeesData = [];
+                
+                function fetchData() {
+                  var url = "http://localhost:47153/Employee/getbyname?name=" + encodeURIComponent(searchInput.value);
+              
+                  fetch(url, {
+                    method: 'GET',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*'
+                      // Diğer başlıkları buraya ekleyebilirsiniz
+                    }
+                  })
+                    .then(response => response.json())
+                    .then(data => {
+                      allEmployees = data.data;
+                      filteredEmployees = allEmployees;
+                      updateTableHeaders(Object.keys(allEmployees[0]));
+                      renderTable(currentPage, filteredEmployees);
+                      renderPagination(filteredEmployees);
+                    })
+                    .catch(error => {
+                      console.log(error);
+                    });
+                }
+              
+                function updateTableHeaders(keys) {
+                  var tableHeaderRow = document.getElementById("table-header-row");
+                  tableHeaderRow.innerHTML = "";
+              
+                  keys.forEach(function (key) {
+                    var th = document.createElement("th");
+                    th.textContent = key;
+                    tableHeaderRow.appendChild(th);
+                  });
+                }
+              
+                function renderTable(page, employees) {
+                  var tbody = document.querySelector("#employee-table tbody");
+                  tbody.innerHTML = "";
+              
+                  var startIndex = (page - 1) * itemsPerPage;
+                  var endIndex = startIndex + itemsPerPage;
+              
+                  for (var i = startIndex; i < endIndex && i < employees.length; i++) {
+                    var employee = employees[i];
+                    var row = "<tr>";
+              
+                    for (var key in employee) {
+                      row += "<td>" + employee[key] + "</td>";
+                    }
+              
+                    row += "</tr>";
+                    tbody.innerHTML += row;
+                  }
+                }
+              
+                function renderPagination(employees) {
+                  var totalPages = Math.ceil(employees.length / itemsPerPage);
+                  var pagination = document.getElementById("pagination");
+                  pagination.innerHTML = "";
+              
+                  for (var i = 1; i <= totalPages; i++) {
+                    var link = document.createElement("a");
+                    link.href = "#";
+                    link.textContent = i;
+                    link.classList.add("page-link");
+                    if (i === currentPage) {
+                      link.classList.add("active");
+                    }
+                    link.addEventListener("click", function (event) {
+                      event.preventDefault();
+                      currentPage = parseInt(this.textContent);
+                      renderTable(currentPage, employees);
+                      renderPagination(employees);
+                    });
+                    pagination.appendChild(link);
+                  }
+                }
+              
+                searchButton.addEventListener("click", function () {
+                  fetchData();
+                });
+              
+                filterButton.addEventListener("click", function () {
+                  var keyword = filterInput.value.trim().toLowerCase();
+                  filteredEmployees = allEmployees.filter(function (employee) {
+                    for (var key in employee) {
+                      if (employee[key].toString().toLowerCase().includes(keyword)) {
+                        return true;
+                      }
+                    }
+                    return false;
+                  });
+                  currentPage = 1;
+                  renderTable(currentPage, filteredEmployees);
+                  renderPagination(filteredEmployees);
+                });
+  
+                document.getElementById('search-button-over').addEventListener('click', fetchDataOver);
+  
+                function fetchDataOver() {
+    var nameInput = document.getElementById('name-input');
+    var dateInput = document.getElementById('date-input');
+  
+    var name = nameInput.value;
+    var date = dateInput.value;
+  
+    if (!name || !date) {
+      console.log('Name and date are required.');
+      return;
+    }
+    var currentDate = new Date();
+    var selectedDate = new Date(date);
+  
+    if (selectedDate > currentDate) {
+      alert('İleri bir tarih girilemez!');
+      return;
+    }
+  
+    var parts = date.split('-');
+    var month = parts[1];
+    var year = parts[0];
+  
+    var apiUrl = 'http://localhost:47153/OverShift/getovershift';
+  
+    fetch(apiUrl + '?name=' + encodeURIComponent(name) + '&month=' + month + '&year=' + year)
+    .then(response => response.json())
+    .then(responseData => {
+      // responseData üzerinden gelen verilere erişim sağlayabilirsiniz
+      var data = responseData.data;
+  
+      if (Array.isArray(data)) {
+        var tableBody = document.querySelector('#overshift-table tbody');
+        tableBody.innerHTML = '';
+  
+        data.forEach(item => {
+          var row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${item.name}</td>
+            <td>${item.remoteDate}</td>
+            <td>${item.officeDate}</td>
+            <td>${item.shiftHour}</td>
+            <td>${item.shiftDuration}</td>
+            <td>${item.shiftCount}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      } else {
+        // API hata mesajını kullanıcıya göster
+        var errorMessage = 'API request failed: ' + data.title;
+        alert(errorMessage);
+      }
+    })
+    .catch(error => {
+      console.log('API request failed:', error);
+      var errorMessage = 'Aranılan Kişiye dair bir kayıt bulunamadı';
+      alert(errorMessage);
+    });
+  }
+  var allEmployees = []; // Tüm çalışan verilerini tutacak dizi
+  
+  document.getElementById('search-button-dto').addEventListener('click', fetchDataDto);
+  document.getElementById('filter-button-dto').addEventListener('click', function() {
+    filterTable();
+  });
+  
+  function fetchDataDto() {
+  var nameInput = document.getElementById('fname-input');
+  var filterInputDto = document.getElementById('filter-input-dto');
+
+  var name = nameInput.value;
+  var filterKeywordDto = filterInputDto.value.trim().toLowerCase();
+
+  var apiUrl = 'http://localhost:47153/Employee/getdetails';
+
+  fetch(apiUrl + '?name=' + encodeURIComponent(name))
+    .then(response => response.json())
+    .then(responseData => {
+      var data = responseData.data;
+
+      if (Array.isArray(data)) {
+        allEmployees = data; // Tüm çalışan verilerini güncelle
+        var filteredDataDto = data.filter(item => {
+          for (var key in item) {
+            if (item[key].toString().toLowerCase().includes(filterKeywordDto)) {
+              return true;
+            }
+          }
+          return false;
+        });
+
+        var tableBody = document.querySelector('#dto-table tbody');
+        tableBody.innerHTML = '';
+
+        filteredDataDto.forEach(item => {
+          var row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${item.fullName}</td>
+            <td>${item.duration}</td>
+            <td>${item.workingHour}</td>
+            <td>${item.officeDate}</td>
+            <td>${item.remoteDate}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      } else {
+        var errorMessage = 'API request failed: ' + data.title;
+        alert(errorMessage);
+      }
+    })
+    .catch(error => {
+      console.log('API request failed:', error);
+      var errorMessage = 'Aranılan Kişiye dair bir kayıt bulunamadı';
+      alert(errorMessage);
+    });
+}
+  
+function filterTableDto() {
+  var filterInputDto = document.getElementById('filter-input-dto');
+  var filterKeywordDto = filterInputDto.value.trim().toLowerCase();
+  
+  var filteredDataDto = allEmployees.filter(item => {
+    for (var key in item) {
+      if (item[key] && item[key].toString().toLowerCase().includes(filterKeywordDto)) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  var tableBody = document.querySelector('#dto-table tbody');
+  tableBody.innerHTML = '';
+
+  filteredDataDto.forEach(item => {
+    var row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${item.fullName}</td>
+      <td>${item.duration}</td>
+      <td>${item.workingHour}</td>
+      <td>${item.officeDate}</td>
+      <td>${item.remoteDate}</td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+document.getElementById('filter-button-dto').addEventListener('click', function() {
+  filterTableDto();
+});
+  
+function uploadFile() {
+  var fileInput = document.getElementById('fileInput');
+  var file = fileInput.files[0];
+
+  if (!file) {
+    console.log('Dosya seçilmedi.');
+    return;
+  }
+
+  var apiUrl = 'http://localhost:47153/Employee/add';
+
+  var formData = new FormData();
+  formData.append('file', file);
+
+  fetch(apiUrl, {
+    method: 'POST',
+    body: formData
+  })
+    .then(response => {
+      if (response.ok) {
+        console.log('Dosya yükleme başarılı.');
+        var successMessage = 'Dosya yükleme başarılı';
+        alert(successMessage);
+      } else {
+        throw new Error('Dosya yükleme hatası: ' + response.statusText);
+      }
+    })
+    .catch(error => {
+      console.log('Dosya yükleme hatası:', error);
+    });
+}
+
+var fileInput = document.getElementById('fileInput');
+fileInput.addEventListener('change', function() {
+  var fileName = this.value.split('\\').pop();
+  var label = document.getElementById('fileInputLabel');
+  label.innerText = fileName;
+});
+
+var uploadButton = document.getElementById('uploadButton');
+uploadButton.addEventListener('click', uploadFile);
+
+function uploadRemoteFile() {
+  var fileInput = document.getElementById('remoteFile');
+  var file = fileInput.files[0];
+
+  if (!file) {
+    console.log('Dosya seçilmedi.');
+    return;
+  }
+
+  var apiUrl = 'http://localhost:47153/RemoteWork/add';
+
+  var formData = new FormData();
+  formData.append('file', file);
+
+  fetch(apiUrl, {
+    method: 'POST',
+    body: formData
+  })
+    .then(response => {
+      if (response.ok) {
+        console.log('Dosya yükleme başarılı.');
+        var successMessage = 'Dosya yükleme başarılı';
+        alert(successMessage);
+      } else {
+        throw new Error('Dosya yükleme hatası: ' + response.statusText);
+      }
+    })
+    .catch(error => {
+      console.log(error);
+    });
+}
+
+var remoteFileInput = document.getElementById('remoteFile');
+remoteFileInput.addEventListener('change', function() {
+  var fileName = this.value.split('\\').pop();
+  var label = document.querySelector('.custom-file-label');
+  label.innerText = fileName;
+});
+
+var remoteUploadButton = document.getElementById('remoteButton');
+remoteUploadButton.addEventListener('click', uploadRemoteFile);
+              </script>
+            
+            
+
+    <div class="az-footer ht-40">
+      <div class="container ht-100p pd-t-0-f">
+      
+      </div><!-- container -->
+    </div><!-- az-footer -->
+
+
+    
+
+  </body>
+</html>
+

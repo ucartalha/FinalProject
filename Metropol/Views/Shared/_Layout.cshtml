@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Metropol</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Metropol.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+</head>
+<body>
+    <div class="w3-sidebar w3-bar-block w3-card w3-animate-left" style="display:none" id="mySidebar">
+        <button class="w3-bar-item w3-button w3-large"
+                onclick="w3_close()">
+            Close &times;
+        </button>
+        <a href="~/Home/Graphic" class="w3-bar-item w3-button">Grafikler</a>
+        <a href="#" class="w3-bar-item w3-button">Dosya Yükleme</a>
+        <a href="#" class="w3-bar-item w3-button">Mesai Hesaplama</a>
+    </div>
+
+    <div id="main">
+
+        <div class="w3-teal">
+            <button id="openNav" class="w3-button w3-teal w3-xlarge" onclick="w3_open()">&#9776;</button>
+            <div class="w3-container">
+                <a href="~/Home/Index" class="az-logo"><span></span> Metropol Card</a>
+                <a href="" id="azMenuShow" class="az-header-menu-icon d-lg-none"><span></span></a>
+            </div>
+        </div>
+
+        
+
+        <div class="w3-container">
+            @RenderBody()  
+            
+
+            <script src="../lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+            <script src="../lib/ionicons/ionicons.js"></script>
+            <script src="../lib/jquery.flot/jquery.flot.js"></script>
+            <script src="../lib/jquery.flot/jquery.flot.resize.js"></script>
+            <script src="../lib/chart.js/Chart.bundle.min.js"></script>
+            <script src="../lib/peity/jquery.peity.min.js"></script>
+            <script src="https://dprd.sulselprov.go.id/web/assets/DataTables-1.10.15/extensions/Responsive/js/dataTables.responsive.js"></script>
+            <script src="../js/azia.js"></script>
+        </div>
+
+    </div>
+
+    <script>
+        function w3_open() {
+            document.getElementById("main").style.marginLeft = "25%";
+            document.getElementById("mySidebar").style.width = "25%";
+            document.getElementById("mySidebar").style.display = "block";
+            document.getElementById("openNav").style.display = 'none';
+        }
+        function w3_close() {
+            document.getElementById("main").style.marginLeft = "0%";
+            document.getElementById("mySidebar").style.display = "none";
+            document.getElementById("openNav").style.display = "inline-block";
+        }
+    </script>
+   
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2023 - Metropol - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+<script>
+    $(document).ready(function () {
+        $("#azMenuShow").on("click", function () {
+            $("#sidebar").toggleClass("active");
+        });
+    });
+</script>
+</html>

@@ -1,0 +1,62 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    background-color: #343a40;
+    transition: all 0.3s;
+}
+
+    #sidebar.active {
+        left: 0;
+    }
+
+    #sidebar .sidebar-header {
+        padding: 20px;
+        background-color: #343a40;
+    }
+
+    #sidebar ul.components {
+        padding: 20px 0;
+    }
+
+    #sidebar ul li {
+        padding: 10px;
+    }
+
+        #sidebar ul li a {
+            color: #fff;
+            text-align: center;
+            display: block;
+            transition: all 0.3s;
+        }
+
+            #sidebar ul li a:hover {
+                color: #17a2b8;
+                background-color: #fff;
+                text-decoration: none;
+            }
+
+    #sidebar.active ul li a:hover {
+        color: #343a40;
+    }
