@@ -41,7 +41,9 @@ namespace Business.DependencyResolver.AutoFac
             builder.RegisterType<EmployeeManager>().As<IEmployeeService>().SingleInstance();
             builder.RegisterType<EfEmployeeDal>().As<IEmployeeDal>().SingleInstance();
 
+            builder.RegisterType<EfVpnEmployeeDal>().As<IVpnEmployeeDal>().SingleInstance();
             builder.RegisterType<InputContext>().AsSelf();
+
 
             builder.RegisterType<FileHelperManager>().As<IFileHelper>().SingleInstance();
             builder.RegisterType<DbContext>().AsSelf().InstancePerLifetimeScope();
