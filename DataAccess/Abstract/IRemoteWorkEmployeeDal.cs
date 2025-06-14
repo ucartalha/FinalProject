@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Abstract
 {
-    public interface IRemoteWorkEmployeeDal:IEntityRepository<RemoteWorkEmployee>
+    public interface IRemoteWorkEmployeeDal:IEntityRepository<VpnEmployee>
     {
-        public List<int> GetDurationByName(string name, int month);
-        public List<CombinedDataDto> GetCombinedData();
+        //public List<int> GetDurationByName(string name, int month);
+        //public List<CombinedDataDto> GetCombinedData();
         
     }
 }

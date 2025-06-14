@@ -8,8 +8,8 @@ namespace WebAPI.Controllers
     [Route("[controller]")]
     public class RemoteWorkController : Controller
     {
-        IRemoteWorkEmployeeService _services;
-        public RemoteWorkController(IRemoteWorkEmployeeService service)
+        IVpnEmployeeService _services;
+        public RemoteWorkController(IVpnEmployeeService service)
         {
             _services = service;
         }

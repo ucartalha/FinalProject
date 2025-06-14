@@ -2,6 +2,7 @@
 using Core.Utilites.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
+using Entities.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Concrete
 {
-    public class EfPersonalDal : EfEntityRepositoryBase<Personal, InputContext>, IPersonalDal
+    public class EfPersonalDal : EfEntityRepositoryBase<Personnal, InputContext>, IPersonalDal
     {
         private readonly IEmployeeRecordDal _employeeRecordDal;
          
@@ -18,83 +19,149 @@ namespace DataAccess.Concrete
         {
             _employeeRecordDal = employeeRecordDal;
         }
-        public IDataResult<List<Personal>> ProcessMonthlyAverage(int Id, int month, int year)
+        public IDataResult<List<LateEmpVpnGroupDto>> GetLates(DateTime startDate, DateTime endDate, int id)
         {
-            List<TimeSpan> workingHours = new List<TimeSpan>();
-            for (int i = 2; i >= 0; i--)
+            using (var context = new InputContext())
             {
-                
-                int targetMonth = month - i;
-                if (targetMonth <= 0)
+                var lateEmployees = from emp in context.EmployeeRecords
+                                    join vpn in context.FinalVpnEmployees
+                                    on emp.RemoteEmployeeId equals vpn.RemoteEmployeeId
+                                    where emp.Date >= startDate && emp.Date <= endDate && emp.RemoteEmployeeId == id
+                                    select new LateEmpVpnDto
+                                    {
+                                        Id = emp.RemoteEmployeeId,
+                                        FullName = emp.Name + " " + emp.SurName,
+                                        FirstRecord = emp.FirstRecord,
+                                        LastRecord = emp.LastRecord,
+                                        WorkingHour = emp.WorkingHour,
+                                        VpnFirstRecord = vpn.FirstRecord,
+                                        VpnLastRecord = vpn.LastRecord,
+                                        Duration = TimeSpan.FromSeconds(Convert.ToDouble(vpn.Duration)),
+                                        LastOfDate = (emp.Date as DateTime?) ?? vpn.Date
+
+                                    };
+
+                var StartingTime = TimeSpan.Parse("08:30:00");
+
+                var categorized = lateEmployees.ToList().Select(e =>
                 {
-                    targetMonth += 12;
-                }
-                workingHours.AddRange(_employeeRecordDal.GetWorkingHoursByName(Id, targetMonth,year));
+                    var dto = new LateEmpVpnDto
+                    {
+                        Id = e.Id,
+                        FullName = e.FullName,
+                        FirstRecord = e.FirstRecord,
+                        LastRecord = e.LastRecord,
+                        WorkingHour = e.WorkingHour,
+                        VpnFirstRecord = e.VpnFirstRecord,
+                        VpnLastRecord = e.VpnLastRecord,
+                        Duration = e.Duration,
+                        LastOfDate = e.LastOfDate
+                    };
+
+                    var isLate = dto.FirstRecord.HasValue && dto.FirstRecord.Value.TimeOfDay > StartingTime;
+                    var isFullWork = dto.WorkingHour.HasValue && dto.WorkingHour.Value.TotalMinutes > 570;
+
+                    if (isLate && isFullWork)
+                        dto.ProcessTemp = 1;
+                    else if (isLate && !isFullWork)
+                        dto.ProcessTemp = 2;
+                    else if (!isLate && !isFullWork)
+                        dto.ProcessTemp = 3;
+                    else
+                        dto.ProcessTemp = 4;
+
+                    dto.IsLate = isLate;
+                    dto.IsFullWork = isFullWork;
+                    return dto;
+                }).ToList();
+
+                var grouped = categorized.GroupBy(x => x.ProcessTemp).Select(g => new LateEmpVpnGroupDto
+                {
+                    ProcessTemp = g.Key,
+                    Employees = g.ToList()
+                }).ToList();
+
+                return new SuccessDataResult<List<LateEmpVpnGroupDto>>(grouped);
             }
-            DateTime date = new DateTime(DateTime.Now.Year, month, 1);
+        }
 
-            using (InputContext context = new InputContext())
+        public IDataResult<List<OfficeVpnDto>> GetOfficeAndVpnDates(DateTime startDate, DateTime endDate, int? departmentId)
+        {
+            using (var context = new InputContext())
             {
-                if (workingHours.Count > 0)
+                List<OfficeVpnDto> officeEmp;
+                List<OfficeVpnDto> vpnEmp;
+
+                if (departmentId != null)
                 {
-                    double monthlyAverageTicks = workingHours.Average(w => w.Ticks);
-                    TimeSpan monthlyAverage = TimeSpan.FromTicks((long)monthlyAverageTicks);
+                    officeEmp = context.EmployeeRecords
+                        .Where(x => x.Date >= startDate && x.Date <= endDate && x.DepartmentId == departmentId)
+                        .Select(x => new OfficeVpnDto
+                        {
+                            Id = x.RemoteEmployeeId,
+                            FullName = x.Name + " " + x.SurName,
+                            OfficeDate = x.Date,
+                            WorkingHour = x.WorkingHour,
+                            OfficeStartDate = x.FirstRecord,
+                            OfficeEndDate = x.LastRecord,
+                            Department = x.Department,
+                            DepartmentId = x.DepartmentId
+                        }).ToList();
 
-                    Personal personal = new Personal();
-                    personal.Id = Id;
-                    personal.AverageHour = monthlyAverage;
-                    personal.Date = date;
-
-                    // Veritabanına ekleme işlemi
-                    context.Add(personal);
-                    context.SaveChanges();
-
-                    List<Personal> personalList = new List<Personal> { personal };
-
-                    return new SuccessDataResult<List<Personal>>(personalList, "Aylık ortalama başarıyla işlendi ve veritabanına eklendi.");
+                    vpnEmp = context.FinalVpnEmployees
+                        .Where(x => x.Date >= startDate && x.Date <= endDate && x.DepartmentId == departmentId)
+                        .Select(x => new OfficeVpnDto
+                        {
+                            Id = x.RemoteEmployeeId,
+                            FullName = x.Name + " " + x.SurName,
+                            RemoteDate = x.Date,
+                            RemoteDuration2 = x.Duration,
+                            VpnStartDate = x.FirstRecord,
+                            VpnEndDate = x.LastRecord,
+                            Department = x.Department,
+                            DepartmentId = x.DepartmentId
+                        }).ToList();
                 }
                 else
                 {
-                    // İsim için çalışma saatleri bulunamadı durumunu işleyebilirsiniz
-                    // ...
+                    officeEmp = context.EmployeeRecords
+                        .Where(x => x.Date >= startDate && x.Date <= endDate)
+                        .Select(x => new OfficeVpnDto
+                        {
+                            Id = x.RemoteEmployeeId,
+                            FullName = x.Name + " " + x.SurName,
+                            OfficeDate = x.Date,
+                            WorkingHour = x.WorkingHour,
+                            OfficeStartDate = x.FirstRecord,
+                            OfficeEndDate = x.LastRecord,
+                            Department = x.Department,
+                            DepartmentId = x.DepartmentId
+                        }).ToList();
 
-                    return new ErrorDataResult<List<Personal>>("İsimle eşleşen çalışma saatleri bulunamadı.");
+                    vpnEmp = context.FinalVpnEmployees
+                        .Where(x => x.Date >= startDate && x.Date <= endDate)
+                        .Select(x => new OfficeVpnDto
+                        {
+                            Id = x.RemoteEmployeeId,
+                            FullName = x.Name + " " + x.SurName,
+                            RemoteDate = x.Date,
+                            RemoteDuration2 = x.Duration,
+                            VpnStartDate = x.FirstRecord,
+                            VpnEndDate = x.LastRecord,
+                            Department = x.Department,
+                            DepartmentId = x.DepartmentId
+                        }).ToList();
                 }
+
+                vpnEmp.ForEach(v => v.RemoteDuration = (int)(v.RemoteDuration2?.TotalSeconds ?? 0));
+
+                var combinedList = officeEmp.Concat(vpnEmp)
+                    .OrderBy(x => x.RemoteDate ?? x.OfficeDate)
+                    .ToList();
+
+                return new SuccessDataResult<List<OfficeVpnDto>>(combinedList);
             }
         }
-        //public IDataResult<List<Personal>> ProcessMonthlyAverage(string name, int month)
-        //{
-        //    List<TimeSpan> workingHours = _employeeRecordDal.GetWorkingHoursByName(name, month);
-        //    using (InputContext context = new InputContext())
-        //    {
-
-
-        //        if (workingHours.Count > 0)
-        //        {
-        //            double monthlyAverageTicks = workingHours.Average(w => w.Ticks);
-        //            TimeSpan monthlyAverage = TimeSpan.FromTicks((long)monthlyAverageTicks);
-
-        //            Personal personal = new Personal();
-        //            personal.Name = name;
-        //            personal.AverageHour = monthlyAverage;
-
-        //            // Veritabanına ekleme işlemi
-        //            context.Add(personal);
-        //            context.SaveChanges();
-
-        //            List<Personal> personalList = new List<Personal> { personal };
-
-        //            return new SuccessDataResult<List<Personal>>(personalList, "Aylık ortalama başarıyla işlendi ve veritabanına eklendi.");
-        //        }
-        //        else
-        //        {
-        //            // İsim için çalışma saatleri bulunamadı durumunu işleyebilirsiniz
-        //            // ...
-
-        //            return new ErrorDataResult<List<Personal>>("İsimle eşleşen çalışma saatleri bulunamadı.");
-        //        }context.SaveChanges();
-        //    }
-        //}
     }
 
         

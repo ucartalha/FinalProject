@@ -12,21 +12,21 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Concrete
 {
-    public class EfRemoteWorkEmployeeDal : EfEntityRepositoryBase<RemoteWorkEmployee, InputContext>, IRemoteWorkEmployeeDal
+    public class EfRemoteWorkEmployeeDal : EfEntityRepositoryBase<VpnEmployee, InputContext>, IRemoteWorkEmployeeDal
     {
-        public List<int> GetDurationByName(string name, int month)
-        {
-            using (InputContext context = new InputContext())
-            {
+        //public List<int> GetDurationByName(string name, int month)
+        //{
+        //    using (InputContext context = new InputContext())
+        //    {
 
-                var remoteEmployee = context.RemoteWorkEmployees
-                    .Where(e => e.FirstName == name && e.LogDate.Month == month)
-                    .Select(e => e.RemoteDuration.Value)
-                    .ToList();
+        //        var remoteEmployee = context.RemoteWorkEmployees
+        //            .Where(e => e.FirstName == name && e.LogDate.Month == month)
+        //            .Select(e => e.RemoteDuration.Value)
+        //            .ToList();
 
-                return remoteEmployee;
-            }
-        }
+        //        return remoteEmployee;
+        //    }
+        //}
         
 
         //public List<CombinedDataDto> GetCombinedData()

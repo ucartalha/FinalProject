@@ -10,9 +10,10 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Abstract
 {
-    public interface IPersonalDal:IEntityRepository<Personal>
+    public interface IPersonalDal:IEntityRepository<Personnal>
     {
-        public IDataResult<List<Personal>> ProcessMonthlyAverage(int Id, int month, int year);
-        
+        public IDataResult<List<LateEmpVpnGroupDto>> GetLates(DateTime startDate, DateTime endDate, int id);
+        public IDataResult<List<OfficeVpnDto>> GetOfficeAndVpnDates(DateTime startDate, DateTime endDate, int? departmentId);
+
     }
 }

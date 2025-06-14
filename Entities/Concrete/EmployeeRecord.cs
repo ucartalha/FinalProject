@@ -11,7 +11,6 @@ namespace Entities.Concrete
     public class EmployeeRecord:IEntity
     {
         public int ID { get; set; }
-
         public int CardId { get; set; }
         public string Name { get; set; }
         public string SurName { get; set; }
@@ -23,7 +22,12 @@ namespace Entities.Concrete
         public DateTime FirstRecord { get; set; }
         public DateTime LastRecord { get; set; }
         public TimeSpan WorkingHour { get; set; }
-        public virtual RemoteEmployee RemoteEmployee { get; set; }         
+        public int? DepartmentId { get; set; }
+
+        //public virtual EmployeeDto PersonnalTrackingEmployeeDtos { get; set; }
 
     }
+
+ 
+
 }

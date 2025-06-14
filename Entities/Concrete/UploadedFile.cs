@@ -9,11 +9,10 @@ namespace Entities.Concrete
 {
     public class UploadedFile:IEntity
     {
-        public int Id { get; set; } // Unique identifier
-        public string FileName { get; set; } // Name of the uploaded file
-        public long FileSize { get; set; } // Size of the uploaded file in bytes
-        public DateTime UploadTime { get; set; } // Time when the file was uploaded
-                                                 // You can add more properties as needed
-        public string ContentHash { get; set; } // Add this line
+        public int Id { get; set; } 
+        public string FileName { get; set; } 
+        public long FileSize { get; set; } 
+        public DateTime UploadTime { get; set; } 
+        public string ContentHash { get; set; } 
     }
 }

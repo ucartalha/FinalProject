@@ -26,7 +26,7 @@ namespace Business.DependencyResolver.AutoFac
             builder.RegisterType<EmployeeRecordManager>().As<IEmployeeRecordService>().SingleInstance();
             builder.RegisterType<EfEmployeeRecordDal>().As<IEmployeeRecordDal>().SingleInstance();
             
-            builder.RegisterType<RemoteWorkEmployeeManager>().As<IRemoteWorkEmployeeService>().SingleInstance();
+            builder.RegisterType<VpnEmployeeManager>().As<IVpnEmployeeService>().SingleInstance();
             builder.RegisterType<EfRemoteEmployeeDal>().As<IRemoteEmployee>().SingleInstance();
             
             builder.RegisterType<UploadFileManager>().As<IUploadFileService>().SingleInstance();
@@ -37,6 +37,9 @@ namespace Business.DependencyResolver.AutoFac
             
             builder.RegisterType<OverShiftManager>().As<IOverShifService>().SingleInstance();
             builder.RegisterType<EfOverShiftDal>().As<IOverShiftDal>().SingleInstance();
+
+            builder.RegisterType<EmployeeManager>().As<IEmployeeService>().SingleInstance();
+            builder.RegisterType<EfEmployeeDal>().As<IEmployeeDal>().SingleInstance();
 
             builder.RegisterType<InputContext>().AsSelf();
 

@@ -22,6 +22,27 @@ namespace DataAccess.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Entities.Concrete.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Departments");
+                });
+
             modelBuilder.Entity("Entities.Concrete.EmployeeRecord", b =>
                 {
                     b.Property<int>("ID")
@@ -39,6 +60,9 @@ namespace DataAccess.Migrations
                     b.Property<string>("Department")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("FirstRecord")
                         .HasColumnType("datetime2");
@@ -131,6 +155,43 @@ namespace DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Personal");
+                });
+
+            modelBuilder.Entity("Entities.Concrete.Personnal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("HireDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("Personnals");
                 });
 
             modelBuilder.Entity("Entities.Concrete.RemoteEmployee", b =>
@@ -240,11 +301,20 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("Entities.Concrete.EmployeeRecord", b =>
                 {
-                    b.HasOne("Entities.Concrete.RemoteEmployee", "RemoteEmployee")
+                    b.HasOne("Entities.Concrete.RemoteEmployee", null)
                         .WithMany("EmployeeRecords")
                         .HasForeignKey("RemoteEmployeeId");
+                });
 
-                    b.Navigation("RemoteEmployee");
+            modelBuilder.Entity("Entities.Concrete.Personnal", b =>
+                {
+                    b.HasOne("Entities.Concrete.Department", "Department")
+                        .WithMany("Personnals")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("Entities.DTOs.ReaderDataDto", b =>
@@ -256,6 +326,11 @@ namespace DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("EmployeeDto");
+                });
+
+            modelBuilder.Entity("Entities.Concrete.Department", b =>
+                {
+                    b.Navigation("Personnals");
                 });
 
             modelBuilder.Entity("Entities.Concrete.RemoteEmployee", b =>

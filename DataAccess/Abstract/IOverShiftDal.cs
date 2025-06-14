@@ -12,9 +12,11 @@ namespace DataAccess.Abstract
 {
     public interface IOverShiftDal: IEntityRepository<OverShift>
     {
-        //public IDataResult<OverShift> IncrementShiftCounts(string name, int month, int count);
-        public List<PersonalOverShiftDto> GetEmployeeDetail(int Id, int month,int year);
-        public IDataResult<List<OverShift>> ProcessShiftPrice(int Id, int month,int year);
-        public IDataResult<List<OverShift>> ProcessShiftPriceAllWorkers(int month, int year);
+        IDataResult<List<OverShiftDto>> ProcessShiftPrice(int id, int month, int year);
+        List<PersonalOverShiftDto> GetEmployeeDetail(int id, int month, int year);
+
+        List<PersonalOverShiftDto> GetAllEmployeeDetail(int month, int year);
+        IDataResult<List<OverShiftDto>> ProcessShiftPriceAllWorkers(int month, int year);
+
     }
 }

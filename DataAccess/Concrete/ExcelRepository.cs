@@ -107,7 +107,7 @@ namespace DataAccess.Concrete
                                 //employeeRecord.WorkingHour = reader.GetDateTime(10);
                                 // Diğer özelliklerin doldurulması
                             }
-                            else if (record is RemoteWorkEmployee remoteWorkEmployee)
+                            else if (record is VpnEmployee remoteWorkEmployee)
                             {
                                 var userValue = reader.GetValue(2);
                                 if (userValue != null)

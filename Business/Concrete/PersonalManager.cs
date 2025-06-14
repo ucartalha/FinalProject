@@ -3,8 +3,10 @@ using Core.Utilites.Results;
 using DataAccess.Abstract;
 using DataAccess.Concrete;
 using Entities.Concrete;
+using Entities.DTOs;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,143 +25,399 @@ namespace Business.Concrete
             _remoteEmployee = remoteEmployee;
         }
 
-        public IDataResult<List<Personal>> GetAll()
-        {                        
-                return new SuccessDataResult<List<Personal>>(_personalDal.GetAll());            
-        }
+        
 
-        public IDataResult<List<RemoteEmployee>> GetAllEmployees()
+        public IDataResult<List<RemoteEmployeeDto>> GetAllEmployees()
         {
-            return new SuccessDataResult<List<RemoteEmployee>>(_remoteEmployee.GetAll());
-        }
-        //public IDataResult<Personal> ProcessMonthlyAverage(string name, int month)
-        //{
-        //    // İlgili aydaki çalışma saatlerini getir
-        //    List<TimeSpan> workingHours = _employeeDal.GetWorkingHoursByName(name, month);
+            var personal = _personalDal.GetAll();
 
-        //    if (workingHours.Count > 0)
-        //    {
-        //        // Ay içindeki toplam süreyi hesapla
-        //        TimeSpan totalHours = TimeSpan.Zero;
-        //        foreach (TimeSpan hour in workingHours)
-        //        {
-        //            totalHours += hour;
-        //        }
-        //        DateTime date = new DateTime(DateTime.Now.Year, month, 1);
-        //        // Ortalama saat hesapla
-        //        TimeSpan monthlyAverage = TimeSpan.FromTicks(totalHours.Ticks / workingHours.Count);
-
-        //        // Personal nesnesini oluştur ve verileri doldur
-        //        Personal personal = new Personal();
-        //        personal.Name = name;
-        //        personal.AverageHour = monthlyAverage;
-        //        personal.Date = date;
-
-        //        // İşlem başarılı ise Personal nesnesini dön
-        //        return new SuccessDataResult<Personal>(personal, "Aylık ortalama başarıyla hesaplandı.");
-        //    }
-        //    else
-        //    {
-        //        // İsim için çalışma saatleri bulunamadı durumunu işleyebilirsiniz
-        //        return new ErrorDataResult<Personal>("İsimle eşleşen çalışma saatleri bulunamadı.");
-        //    }
-        //}
-        public IDataResult<List<Personal>> ProcessMonthlyAverage(int Id, int month, int year)
-        {
-            List<Personal> personalList = new List<Personal>();
-            DateTime currentDate = DateTime.Now;
-            int currentYear = currentDate.Year;
-            int previousMonth1 = month - 1;
-            int previousMonth2 = month - 2;
-
-            if (previousMonth1 <= 0)
+            List<RemoteEmployeeDto> remoteEmployeeDtos = new List<RemoteEmployeeDto>();
+            foreach (var item in personal)
             {
-                previousMonth1 += 12;
-                currentYear--;
-            }
-
-            if (previousMonth2 <= 0)
-            {
-                previousMonth2 += 12;
-                currentYear--;
-            }
-            List<int> result = new List<int>();
-            int resultIndex = 0;
-            for (int i = 0; i < 3; i++)
-            {
-                int targetMonth = month - i;
-                if (targetMonth <= 0)
+                RemoteEmployeeDto remoteEmployeeDto = new RemoteEmployeeDto
                 {
-                    targetMonth += 12;
+                    Id = item.Id,
+                    FirstName = item.FirstName,
+                    LastName = item.LastName,
+                };
+                remoteEmployeeDtos.Add(remoteEmployeeDto);
+            }
+
+            return new SuccessDataResult<List<RemoteEmployeeDto>>(remoteEmployeeDtos);
+        }
+
+        public IDataResult<List<RemoteEmployeeDto>> GetEmployeesWithDepartmentId(int departmentId)
+        {
+            List<RemoteEmployeeDto> remoteEmployeeDtos = new List<RemoteEmployeeDto>();
+            List<Personnal> resultData = _personalDal.GetAll(x=>x.DepartmentId==departmentId);
+            foreach (var item in resultData)
+            {
+                remoteEmployeeDtos.Add(new RemoteEmployeeDto
+                {
+                    Id = item.Id,
+                    FirstName = item.FirstName,
+                    LastName = item.LastName
+                    });
+            }
+            if (remoteEmployeeDtos.Count<0)
+            {
+                return new ErrorDataResult<List<RemoteEmployeeDto>>();
+            }
+            return new SuccessDataResult<List<RemoteEmployeeDto>>(remoteEmployeeDtos, "Departman Id'sine göre çalışanlar başarıyla getirildi.");
+        }
+
+
+        public IDataResult<List<PersonalDto>> ProcessMonthlyAverage(int Id, int month, int year)
+        {
+            try
+            {
+                List<PersonalDto> personalList = new List<PersonalDto>();
+                DateTime currentDate = DateTime.Now;
+                int currentYear = year;
+                int previousMonth1 = month - 1;
+                int previousMonth2 = month - 2;
+                int previousYear = year - 1;
+
+                if (previousMonth1 <= 0)
+                {
+                    previousMonth1 += 12;
+                    previousMonth2 += 12;
+                    currentYear = previousYear;
                 }
-                result = _remoteEmployee.GetDurationByName(Id, targetMonth, year, result);
-                List<TimeSpan> workingHours = _employeeDal.GetWorkingHoursByName(Id, targetMonth, year);
 
-                
+                List<int> result = new List<int>();
+                int resultIndex = 0;
 
-                if (workingHours.Count() >  0 || result.Count() > 0 )
+                for (int i = 0; i < 3; i++)
                 {
-                    // Ay içindeki toplam süreyi hesapla
-                    TimeSpan totalHours = TimeSpan.Zero;
-                    foreach (TimeSpan hour in workingHours)
+                    int targetMonth = month - i;
+                    if (targetMonth <= 0)
                     {
-                        totalHours += hour;
+                        targetMonth += 12;
+                        currentYear = previousYear;
                     }
 
-                    // Ortalama saat hesapla
-                    
-                    TimeSpan monthlyAverage = default(TimeSpan);
-                    if (totalHours.Ticks != 0 || workingHours.Count() != 0)
+                    if (month == 1)
                     {
-                        monthlyAverage = TimeSpan.FromTicks(totalHours.Ticks / workingHours.Count);
-
+                        year = previousYear + 1;
                     }
-                    //Personal personal = new Personal();
-                    List<int> totalDuration = new List<int>();
-                    List<int> monthlyDuration = new List<int>();
 
+                    result = _remoteEmployee.GetDurationByName(Id, targetMonth, year, result);
+                    var workingResult = _employeeDal.GetWorkingHoursByName(Id, targetMonth, year);
 
-                    while (resultIndex < result.Count)
+                    List<TimeSpan> workingHours = workingResult.Data;
+
+                    if ((workingHours?.Count ?? 0) > 0 || (result?.Count ?? 0) > 0)
                     {
-                        Personal personal = new Personal
+                        TimeSpan totalHours = TimeSpan.Zero;
+                        foreach (TimeSpan hour in workingHours)
                         {
-                            Id = Id,
+                            totalHours += hour;
+                        }
+
+                        TimeSpan monthlyAverage = TimeSpan.Zero;
+                        if (totalHours.Ticks != 0 && workingHours.Count != 0)
+                        {
+                            monthlyAverage = TimeSpan.FromTicks(totalHours.Ticks / workingHours.Count);
+                        }
+
+                        while (resultIndex < result.Count)
+                        {
+                            if (resultIndex + 1 >= result.Count)
+                                break;
+
+                            PersonalDto personal = new PersonalDto
+                            {
+                                Id = Id,
+                                AverageHour = monthlyAverage,
+                                OfficeDay = workingHours.Count,
+                                RemoteHour = result[resultIndex],
+                                VpnDay = result[resultIndex + 1],
+                                Date = new DateTime(currentYear, targetMonth, 1)
+                            };
+
+                            personalList.Add(personal);
+                            resultIndex += 2;
+                        }
+                    }
+                }
+
+                if (personalList.Count > 0)
+                {
+                    return new SuccessDataResult<List<PersonalDto>>(personalList, "Önceki 3 ayın ortalama saatleri başarıyla hesaplandı.");
+                }
+
+                return new ErrorDataResult<List<PersonalDto>>("İsimle eşleşen çalışma saatleri bulunamadı.");
+            }
+            catch (Exception ex)
+            {
+                return new ErrorDataResult<List<PersonalDto>>($"Hata oluştu: {ex.Message}");
+            }
+        }
+
+        public IDataResult<List<TopPersonnalDto>> ProcessMonthlyAverageBestPersonal(int month, int year, int departmentId)
+        {
+            try
+            {
+                List<TopPersonnalDto> personalList = new List<TopPersonnalDto>();
+                int currentYear = year;
+
+                var allEmployeeIdsResult = _employeeDal.GetAllIdWithDepartment(departmentId);
+                List<int> allEmployeeIds = allEmployeeIdsResult.Data;
+
+                foreach (var employeeId in allEmployeeIds)
+                {
+                    string name = null;
+                    string surname = null;
+
+                    var workingHoursResult = _employeeDal.GetWorkingHoursByWeekEnd(employeeId, month, year);
+                    var durationsResult = _employeeDal.GetVpnByName(employeeId, month, year);
+                    var empResult = _employeeDal.GetNameWithId(employeeId);
+
+                    var workingHours = workingHoursResult.Data;
+                    var durations = durationsResult.Data;
+                    var emp = empResult.Data;
+
+                    foreach (var item in emp)
+                    {
+                        name = item.Name;
+                        surname = item.SurName;
+                    }
+
+                    if ((workingHours?.Count ?? 0) > 0 || (durations?.Count ?? 0) > 0)
+                    {
+                        TimeSpan totalWeekdayHours = TimeSpan.Zero;
+                        TimeSpan totalWeekendHours = TimeSpan.Zero;
+                        int weekendCount = 0;
+                        int weekDayCount = 0;
+
+                        foreach (var record in workingHours)
+                        {
+                            if (IsWeekday(record.Date))
+                            {
+                                totalWeekdayHours += record.WorkingHour;
+                                weekDayCount++;
+                            }
+                            else
+                            {
+                                totalWeekendHours += record.WorkingHour;
+                                weekendCount++;
+                            }
+                        }
+
+                        foreach (var record in durations)
+                        {
+                            if (IsWeekday(record.Date))
+                            {
+                                totalWeekdayHours += record.WorkingHour;
+                                weekDayCount++;
+                            }
+                            else
+                            {
+                                totalWeekendHours += record.WorkingHour;
+                                weekendCount++;
+                            }
+                        }
+
+                        TimeSpan avgWeekday = weekDayCount != 0 ? TimeSpan.FromSeconds(totalWeekdayHours.TotalSeconds / weekDayCount) : TimeSpan.Zero;
+                        TimeSpan avgWeekend = weekendCount != 0 ? TimeSpan.FromSeconds(totalWeekendHours.TotalSeconds / weekendCount) : TimeSpan.Zero;
+
+                        TimeSpan monthlyAverage = totalWeekdayHours + totalWeekendHours;
+
+                        TopPersonnalDto personal = new TopPersonnalDto
+                        {
+                            Id = employeeId,
+                            Name = name + " " + surname,
                             AverageHour = monthlyAverage,
-                            RemoteHour = result[resultIndex],
-                            Date = new DateTime(currentYear, targetMonth, 1)
+                            TotalHour = avgWeekday,
+                            WeekendTotalHour = avgWeekend,
+                            Date = new DateTime(currentYear, month, 1)
                         };
 
                         personalList.Add(personal);
-                        resultIndex++;
                     }
+                }
 
+                var top5PersonalList = personalList.OrderByDescending(p => p.AverageHour).Take(5).ToList();
 
-
-
-
-
-                    // Personal nesnesini oluştur ve verileri doldur
-
-                    //personal.Id = Id;
-                    //    personal.AverageHour = monthlyAverage;
-                    //    personal.RemoteHour = averageDuration != 0 ? averageDuration : 0;
-                    //    personal.Date = new DateTime(currentYear, targetMonth, 1);
-
-                    //    personalList.Add(personal);
-
+                if (top5PersonalList.Count > 0)
+                {
+                    return new SuccessDataResult<List<TopPersonnalDto>>(top5PersonalList, "Önceki 3 ayın en yüksek ortalama saatli personeller başarıyla bulundu.");
+                }
+                else
+                {
+                    return new ErrorDataResult<List<TopPersonnalDto>>("Çalışma saatleri bulunan personel yok.");
                 }
             }
-
-            if (personalList.Count > 0)
+            catch (Exception ex)
             {
-                return new SuccessDataResult<List<Personal>>(personalList, "Önceki 3 ayın ortalama saatleri başarıyla hesaplandı.");
-            }
-            else
-            {
-                // İsim için çalışma saatleri bulunamadı durumunu işleyebilirsiniz
-                return new ErrorDataResult<List<Personal>>("İsimle eşleşen çalışma saatleri bulunamadı.");
+                return new ErrorDataResult<List<TopPersonnalDto>>($"Hata oluştu: {ex.Message}");
             }
         }
+
+        public IDataResult<List<TopPersonnalDto>> ProcessMonthlyAverageSelectedPersonal(int month, int year, int[] remoteId)
+        {
+            try
+            {
+                List<TopPersonnalDto> personalList = new List<TopPersonnalDto>();
+                int currentYear = year;
+
+                var allEmployeeIdsResult = _employeeDal.GetAllId(remoteId);
+                var allEmployeeIds = allEmployeeIdsResult.Data;
+
+                foreach (var employeeId in allEmployeeIds)
+                {
+                    string name = null;
+                    string surname = null;
+
+                    var workingHoursResult = _employeeDal.GetWorkingHoursByWeekEnd(employeeId, month, year);
+                    var durationsResult = _employeeDal.GetVpnByName(employeeId, month, year);
+                    var empResult = _employeeDal.GetNameWithId(employeeId);
+
+                    var workingHours = workingHoursResult.Data;
+                    var durations = durationsResult.Data;
+                    var emp = empResult.Data.FirstOrDefault();
+
+                    if (emp != null)
+                    {
+                        name = emp.Name;
+                        surname = emp.SurName;
+                    }
+
+                    var allRecords = workingHours.Concat(durations);
+
+                    if (allRecords.Any())
+                    {
+                        var groupedByDate = allRecords
+                            .GroupBy(r => r.Date)
+                            .Select(g => new
+                            {
+                                Date = g.Key,
+                                TotalHours = g.Sum(r => r.WorkingHour.TotalSeconds)
+                            })
+                            .ToList();
+
+                        TimeSpan totalWeekdayHours = TimeSpan.Zero;
+                        TimeSpan totalWeekendHours = TimeSpan.Zero;
+                        int weekendCount = 0;
+                        int weekDayCount = 0;
+
+                        foreach (var record in groupedByDate)
+                        {
+                            TimeSpan workingHour = TimeSpan.FromSeconds(record.TotalHours);
+                            if (IsWeekday(record.Date))
+                            {
+                                totalWeekdayHours += workingHour;
+                                weekDayCount++;
+                            }
+                            else
+                            {
+                                totalWeekendHours += workingHour;
+                                weekendCount++;
+                            }
+                        }
+
+                        TimeSpan avgWeekday = weekDayCount != 0 ? TimeSpan.FromSeconds(totalWeekdayHours.TotalSeconds / weekDayCount) : TimeSpan.Zero;
+                        TimeSpan avgWeekend = weekendCount != 0 ? TimeSpan.FromSeconds(totalWeekendHours.TotalSeconds / weekendCount) : TimeSpan.Zero;
+                        TimeSpan monthlyAverage = totalWeekdayHours + totalWeekendHours;
+
+                        TopPersonnalDto personal = new TopPersonnalDto
+                        {
+                            Id = employeeId,
+                            Name = $"{name} {surname}",
+                            AverageHour = monthlyAverage,
+                            TotalHour = avgWeekday,
+                            WeekendTotalHour = avgWeekend,
+                            Date = new DateTime(currentYear, month, 1),
+                            Rank = 0
+                        };
+
+                        personalList.Add(personal);
+                    }
+                }
+
+                var filteredPersonalList = personalList
+                    .OrderByDescending(p => p.AverageHour)
+                    .Where(p => remoteId.Contains(p.Id))
+                    .ToList();
+
+                if (filteredPersonalList.Count > 0)
+                {
+                    return new SuccessDataResult<List<TopPersonnalDto>>(filteredPersonalList, "Seçilen personellerin en yüksek ortalama saatleri başarıyla bulundu.");
+                }
+
+                return new ErrorDataResult<List<TopPersonnalDto>>("Çalışma saatleri bulunan personel yok.");
+            }
+            catch (Exception ex)
+            {
+                return new ErrorDataResult<List<TopPersonnalDto>>($"İşlem sırasında hata oluştu: {ex.Message}");
+            }
+        }
+
+        public IDataResult<List<OfficeVpnDto>> GetOfficeAndVpnDates(DateTime startDate, DateTime endDate, int? departmentId)
+        {
+            var result = _personalDal.GetOfficeAndVpnDates(startDate, endDate, departmentId);
+
+            if (result == null || result.Data.Count <= 0)
+            {
+                return new ErrorDataResult<List<OfficeVpnDto>>("Tarih aralığında bir çalışan bulunamadı");
+            }
+
+            return new SuccessDataResult<List<OfficeVpnDto>>(result.Data, "Tarih aralığındaki çalışanlar getirildi");
+        }
+
+        private bool IsWeekday(DateTime date)
+        {
+            return date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday;
+        }
+        public string GetDayOfWeek(DateTime date)
+        {
+            // Tarihin haftanın hangi günü olduğunu belirle
+            DayOfWeek dayOfWeek = date.DayOfWeek;
+
+            // Gün ismini Türkçe olarak döndür
+            switch (dayOfWeek)
+            {
+                case DayOfWeek.Monday:
+                    return "Pazartesi";
+                case DayOfWeek.Tuesday:
+                    return "Salı";
+                case DayOfWeek.Wednesday:
+                    return "Çarşamba";
+                case DayOfWeek.Thursday:
+                    return "Perşembe";
+                case DayOfWeek.Friday:
+                    return "Cuma";
+                case DayOfWeek.Saturday:
+                    return "Cumartesi";
+                case DayOfWeek.Sunday:
+                    return "Pazar";
+                default:
+                    return "Bilinmeyen gün";
+            }
+        }
+
+        // Haftanın ilk gününü hesaplayan yardımcı metod
+        public static DateTime FirstDateOfWeek(int year, int weekOfYear, CultureInfo cultureInfo)
+        {
+            DateTime jan1 = new DateTime(year, 1, 1);
+            int daysOffset = DayOfWeek.Thursday - jan1.DayOfWeek;
+
+            DateTime firstThursday = jan1.AddDays(daysOffset);
+            var cal = cultureInfo.Calendar;
+            int firstWeek = cal.GetWeekOfYear(firstThursday, cultureInfo.DateTimeFormat.CalendarWeekRule, cultureInfo.DateTimeFormat.FirstDayOfWeek);
+
+            var weekNum = weekOfYear;
+            if (firstWeek <= 1)
+            {
+                weekNum -= 1;
+            }
+
+            var result = firstThursday.AddDays(weekNum * 7);
+            return result.AddDays(-3);
+        }
+
+
 
     }
 }

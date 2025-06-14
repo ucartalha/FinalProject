@@ -17,16 +17,16 @@ namespace DataAccess.Concrete
         }
 
         public DbSet<EmployeeRecord> EmployeeRecords { get; set; }
-        public DbSet<RemoteWorkEmployee> RemoteWorkEmployees { get; set; }
+        public DbSet<VpnEmployee> VpnEmployees { get; set; }
         public DbSet<UploadedFile> UploadedFiles { get; set; }
         public DbSet<Personal> Personal { get; set; }
         public DbSet<OverShift> OverShifts { get; set; }
-        //public DbSet<RemoteEmployeeDto> RemoteEmployeeDto { get; set; }
-        //public DbSet<InfoEmployeeDto> InfoEmployeeDto { get; set; }
        
         public DbSet<RemoteEmployee> EmployeeDtos { get; set; }
         public DbSet<ReaderDataDto> ReaderDataDtos { get; set; }
+        public DbSet<Personnal> Personnals{ get; set; }
+        public DbSet<Department> Departments{ get; set; }
+        public DbSet<FinalVpnEmployee> FinalVpnEmployees { get; set; }
 
-        
     }
 }

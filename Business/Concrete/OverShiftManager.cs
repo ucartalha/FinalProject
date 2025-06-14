@@ -2,6 +2,7 @@
 using Core.Utilites.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
+using Entities.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,63 +18,39 @@ namespace Business.Concrete
         {
             _overDal = overShiftDal;
         }
-        public IDataResult<List<OverShift>> ProcessShiftPrice(int Id, int month, int year)
+        public IResult ProcessShiftPrice(int id, int month, int year)
         {
+            var result = _overDal.ProcessShiftPrice(id, month, year);
 
-            var result = _overDal.ProcessShiftPrice(Id, month, year);
             if (result.Success)
             {
-                return new SuccessDataResult<List<OverShift>>(result.Data);
+                return new SuccessResult("Vardiya ücreti başarıyla hesaplandı.");
             }
-            return new ErrorDataResult<List<OverShift>>("işlem hesaplanamadı");
 
+            return new ErrorResult("İşlem hesaplanamadı.");
         }
-
-        //public IDataResult<List<OverShift>> ProcessShiftPriceAllWorkers(int month, int year)
-        //{
-        //    var overShiftData = _overDal.ProcessShiftPriceAllWorkers(month, year);
-
-        //    if (overShiftData.Success && overShiftData.Data != null)
-        //    {
-        //        var overShiftList = overShiftData.Data;
-
-        //        var nameCountPairs = overShiftList
-        //            .GroupBy(overShift => overShift.Name)
-        //            .Select(group => (Name: group.Key, TotalCount: group.Sum(overShift => overShift.ShiftCount)))
-        //            .ToList();
-
-        //        List<OverShift> overs = new List<OverShift>();
-        //        overs.AddRange(overShiftList);
-
-        //        return new SuccessDataResult<List<OverShift>>(overs, "OverShift count by employee retrieved successfully.");
-        //    }
-
-        //    return new ErrorDataResult<List<OverShift>>("No over shift data found.");
-        //}
-        public IDataResult<List<OverShift>> ProcessShiftPriceAllWorkers(int month, int year)
+        public IDataResult<List<OverShiftDto>> ProcessShiftPriceAllWorkers(int month, int year)
         {
             var overShiftData = _overDal.ProcessShiftPriceAllWorkers(month, year);
-            
+
             if (overShiftData.Success && overShiftData.Data != null)
             {
-                var overShiftList = overShiftData.Data;
-
-                var nameCountPairs = overShiftList
-                    .GroupBy(overShift => new { overShift.Name})
-                    .Select(group => new OverShift
+                var nameCountPairs = overShiftData.Data
+                    .GroupBy(overShift => overShift.Name)
+                    .Select(group => new OverShiftDto
                     {
-                        
-                        Name = group.Key.Name,
+                        Name = group.Key,
                         ShiftCount = group.Sum(overShift => overShift.ShiftCount),
-                        
                     })
                     .ToList();
 
-                return new SuccessDataResult<List<OverShift>>(nameCountPairs, "OverShift count by employee retrieved successfully.");
+                return new SuccessDataResult<List<OverShiftDto>>(nameCountPairs, "OverShift count by employee retrieved successfully.");
             }
 
-            return new ErrorDataResult<List<OverShift>>("No over shift data found.");
+            return new ErrorDataResult<List<OverShiftDto>>("No over shift data found.");
         }
+
+
 
     }
 

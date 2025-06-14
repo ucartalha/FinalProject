@@ -1,0 +1,57 @@
+﻿@using Core.Utilities.Results
+@{
+    ViewBag.Title = "Dosya Yükleme";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- FontAwesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+
+<!-- SweetAlert JS -->
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- VPN Yükleme -->
+        <div class="col-md-6">
+            <h5><i class="fas fa-cloud-upload-alt"></i> VPN Dosya Yükleme</h5>
+            <form action="/PersonnalTracking/AddFileVPN" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="file" name="file" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Excel Yükle</button>
+            </form>
+        </div>
+
+        <!-- Office Yükleme -->
+        <div class="col-md-6">
+            <h5><i class="fas fa-cloud-upload-alt"></i> Ofis Dosya Yükleme</h5>
+            <form action="/PersonnalTracking/AddFileOffice" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="file" name="file" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Excel Yükle</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        @if (Model != null)
+        {
+            if (Model.Success)
+            {
+                <text>
+                        swal("Başarılı!", "@Model.Message", "success");
+                </text>
+            }
+            else
+            {
+                <text>
+                        swal("Hata!", "@Model.Message", "error");
+                </text>
+            }
+        }
+    </script>
+}
