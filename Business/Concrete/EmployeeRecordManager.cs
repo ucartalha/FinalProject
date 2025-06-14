@@ -293,7 +293,8 @@ namespace Business.Concrete
                     FirstName = firstName,
                     LastName = lastName,
                     UserName= firstName +'.'+lastName,
-                    DepartmentId=0
+                    Email= firstName + '.'+ lastName + "@sirketmaili.com",
+                    DepartmentId=99
                 };
 
                 _dbContext.Personnals.Add(newEmployee);

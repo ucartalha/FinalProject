@@ -1,0 +1,158 @@
+﻿@{
+    ViewData["Title"] = "Departman Bazlı Performans";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="~/css/personnalTracking/TrackingStyle.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/personnalTracking/performanceByDepartment.js"></script>
+}
+
+<div class="container mt-4">
+    <h2>Departman Bazlı Performans</h2>
+
+    <div class="row mt-3">
+        <div class="col-md-3">
+            <label>Departman</label>
+            <select id="departmentSelect" class="form-control">
+                <option value="">Tümü</option>
+                <!-- Departmanlar JS ile doldurulacak -->
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label>Başlangıç Tarihi</label>
+            <input type="date" id="startDate" class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <label>Bitiş Tarihi</label>
+            <input type="date" id="endDate" class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <label>&nbsp;</label>
+            <button id="btnFilter" class="btn btn-success w-100">
+                <i class="fa fa-search"></i> Sorgula
+            </button>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <i class="fa fa-smile fa-3x"></i>
+                        <div class="text-end">
+                            <h4 id="GetCustomerAmountByStatutrue">-</h4>
+                            <span>Toplam Çalışma Saati</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <i class="fa fa-users fa-3x"></i>
+                        <div class="text-end">
+                            <h4 id="GetCustomerAmount">-</h4>
+                            <span>Çalışan Kişi Sayısı</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <i class="fa fa-clock fa-3x"></i>
+                        <div class="text-end">
+                            <h4 id="GetDiscountAmount">-</h4>
+                            <span>Ortalama Çalışma Saati</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    Günlere Göre Ofis/VPN Sayısı
+                </div>
+                <div class="card-body">
+                    <div id="chartContainer">
+                        <canvas id="departmentChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    Çalışanların Performansı
+                </div>
+                <div class="card-body">
+                    <table id="performanceTable" class="table table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Ad Soyad</th>
+                                <th>Toplam Saat</th>
+                                <th>Ofis Saat</th>
+                                <th>VPN Saat</th>
+                                <th>Geç Kalma</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dinamik veri buraya eklenecek -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    En Çok Çalışan 5 Kişi
+                </div>
+                <div class="card-body">
+                    <table id="employeeTable" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>İsim Soyisim</th>
+                                <th>Toplam Çalışma Saati</th>
+                                <th>Hafta İçi</th>
+                                <th>Hafta Sonu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dinamik veri buraya eklenecek -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

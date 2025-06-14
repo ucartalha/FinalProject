@@ -11,7 +11,7 @@ namespace Entities.Concrete
     {
         public int Id { get; set; } 
         public string Name { get; set; } // Departman adı
-        public string Description { get; set; } 
+        public string? Description { get; set; } 
         public ICollection<Personnal> Personnals { get; set; }
     }
 }

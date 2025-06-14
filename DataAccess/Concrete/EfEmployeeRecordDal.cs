@@ -121,10 +121,17 @@ namespace DataAccess.Concrete
 
                     if (user == null)
                     {
+                        // 99 ID'li departman gerçekten var mı 
+                        var unknownDepartment = context.Departments.FirstOrDefault(d => d.Id == 99);
+                        if (unknownDepartment == null)
+                        {
+                            return new ErrorDataResult<UserWithDepartmentDto>("DepartmanId 99 (Bilinmeyen) sistemde tanımlı değil.");
+                        }
+
                         return new SuccessDataResult<UserWithDepartmentDto>(new UserWithDepartmentDto
                         {
-                            DepartmentId = 0,
-                            DepartmetName = "Bilinmeyen"
+                            DepartmentId = unknownDepartment.Id,
+                            DepartmetName = unknownDepartment.Name
                         });
                     }
 
@@ -135,7 +142,7 @@ namespace DataAccess.Concrete
 
                     return new SuccessDataResult<UserWithDepartmentDto>(new UserWithDepartmentDto
                     {
-                        DepartmentId = user.DepartmentId ?? 0,
+                        DepartmentId = user.DepartmentId ?? 99,
                         DepartmetName = departmentName
                     });
                 }
@@ -145,6 +152,7 @@ namespace DataAccess.Concrete
                 return new ErrorDataResult<UserWithDepartmentDto>("Hata: " + ex.Message);
             }
         }
+
 
         public IResult UpdateById(int id, string newName)
         {

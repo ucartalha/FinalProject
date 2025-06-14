@@ -9,21 +9,23 @@
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="mainNav">
-            <ul class="navbar-nav me-auto mb-2 mb-sm-0">
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Employees" asp-action="Index">Çalışanlar</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Employees" asp-action="Create">Kayıt Ekle</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Reports" asp-action="Index">Raporlar</a>
-                </li>
-            </ul>
-        </div>
+        <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Employees" asp-action="Index">Çalışanlar</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Employees" asp-action="Create">Kayıt Ekle</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Reports" asp-action="Index">Raporlar</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="PersonnalTracking" asp-action="PerformanceByDepartment">Departman Performansı</a>
+            </li>
+        </ul>
+
     </div>
 </nav>

@@ -237,6 +237,20 @@ public class PersonnalTrackingController : Controller
 
         return Json(new { data = new List<object>() });
     }
+    [HttpGet]
+    public JsonResult GetDepartments()
+    {
+        var list = _employeeService.GetDepartments();
+
+        var result = list.Select(d => new
+        {
+            id = d.Id,
+            name = d.Name
+        });
+
+        return Json(new { data = result });
+    }
+
 
     private ContentResult JsonCamel(object result)
     {
