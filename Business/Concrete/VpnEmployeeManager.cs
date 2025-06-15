@@ -210,12 +210,10 @@ namespace Business.Concrete
         }
         public IDataResult<List<ExpectedWorkingDto>> Percentages(int month, int year, int? departmentId)
         {
-            var result = _vpnEmployeeDal.GetEmployeeWorkTime(
-                new DateTime(year, month, 1),
-                new DateTime(year, month, DateTime.DaysInMonth(year, month)),
-                departmentId,
-                0
-            );
+            var startDate = new DateTime(year, month, 1);
+    var endDate = new DateTime(year, month, DateTime.DaysInMonth(year, month));
+
+    var result = _vpnEmployeeDal.GetEmployeeWorkTime(startDate, endDate, null,0);
 
             if (result == null || result.Data == null || result.Data.Count == 0)
             {

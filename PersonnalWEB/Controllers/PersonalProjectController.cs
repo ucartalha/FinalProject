@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
 using PersonnalWEB.Models;
+using Core.Utilites.Results;
 
 public class PersonnalTrackingController : Controller
 {
@@ -79,6 +80,23 @@ public class PersonnalTrackingController : Controller
         ViewBag.Model = GetAllEmployee();
         return View();
     }
+    //public IActionResult PerformanceByEmployee(DateTime? startDate, DateTime? endDate, int? employeeId, int? departmentId)
+    //{
+    //    var departments = _employeeService.GetDepartments();
+    //    var employees = _personalService.GetAllEmployees();
+
+    //    string departmentName = departments.FirstOrDefault(x => x.Id == departmentId)?.Name ?? "Tümü";
+
+    //    var model = new PerformanceByEmployeeViewModel
+    //    {
+    //        StartDate = startDate ?? DateTime.Now.AddMonths(-1),
+    //        EndDate = endDate ?? DateTime.Now,
+    //        SelectedEmployeeId = employeeId,
+    //        Employees = employees.Data,
+    //    };
+
+    //    return View(model);
+    //}
 
     [HttpGet]
     public ContentResult GetAllEmployee()
@@ -117,10 +135,29 @@ public class PersonnalTrackingController : Controller
     [HttpGet]
     public ContentResult Percentages(int month, int year, int? departmentId)
     {
-        var result = _vpnEmployeeService.Percentages(month, year, departmentId);
+        IDataResult<List<ExpectedWorkingDto>> result;
+
+        if (month >= 1 && month <= 12 && year >= 2000 && year <= DateTime.Now.Year + 1)
+        {
+            result = _vpnEmployeeService.Percentages(month, year, departmentId);
+        }
+        else
+        {
+            result = new ErrorDataResult<List<ExpectedWorkingDto>>("Geçersiz tarih parametresi.");
+        }
+
         return JsonCamel(result);
     }
+    public IActionResult MonthlyWorkPercentage()
+    {
+        var model = new MonthlyWorkPercentageViewModel
+        {
+            Departments = _employeeService.GetDepartments(),
+            SelectedDepartmentId = null // default tümü
+        };
 
+        return View(model);
+    }
     [HttpGet]
     public ActionResult PersonalRecords() => View();
 
@@ -192,7 +229,7 @@ public class PersonnalTrackingController : Controller
     [HttpGet]
     public ContentResult BestPersonalMonth(int month, int year, int departmentId)
     {
-        var result = _personalService.ProcessMonthlyAverageBestPersonal(month, year, departmentId);
+                var result = _personalService.ProcessMonthlyAverageBestPersonal(month, year, departmentId);
         return JsonCamel(result);
     }
 

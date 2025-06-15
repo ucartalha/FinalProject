@@ -1,0 +1,142 @@
+﻿@{
+    ViewData["Title"] = "Aylık Yüzdelik Çalışma";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/datatables/datatables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+    <style>
+        #dataTable, th {
+            text-align: center;
+        }
+
+        #showButton {
+            margin-top: 8px;
+        }
+    </style>
+}
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label>Departman</label>
+        <select id="departmentSelect" class="form-control">
+            <option value="">Tümü</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label>Ay</label>
+        <input type="month" id="monthPicker" class="form-control" />
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-danger" id="showButton">Göster</button>
+    </div>
+</div>
+
+<table id="dataTable" class="table table-striped">
+    <thead>
+        <tr>
+            <th>İsim</th>
+            <th>Gerekli Saat</th>
+            <th>Çalışılan Saat</th>
+            <th>Yüzde</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+@section Scripts {
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script src="~/lib/datatables/datatables.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        let table;
+
+        $(document).ready(function () {
+            table = $('#dataTable').DataTable({
+                language: { url: '/Content/Turkish.json' }
+            });
+
+            // Departman listesini AJAX ile doldur
+            $.getJSON('/PersonnalTracking/GetDepartments', function (response) {
+                if (response.success) {
+                    const departments = response.data;
+                    departments.forEach(dept => {
+                        $('#departmentSelect').append(`<option value="${dept.id}">${dept.name}</option>`);
+                    });
+                }
+            });
+
+            // Sayfa yüklendiğinde mevcut ayı inputa ata
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            $('#monthPicker').val(`${yyyy}-${mm}`);
+
+            // Göster butonu click
+            $('#showButton').click(function () {
+                const selectedDate = $('#monthPicker').val();
+                if (!selectedDate) return;
+
+                const [yearStr, monthStr] = selectedDate.split('-');
+                const year = parseInt(yearStr);
+                const month = parseInt(monthStr);
+                const departmentId = $('#departmentSelect').val();
+
+                if (!year || !month || month < 1 || month > 12) {
+                    alert("Geçersiz tarih seçimi.");
+                    return;
+                }
+
+                $.ajax({
+                    url: '/PersonnalTracking/Percentages',
+                    type: 'GET',
+                    data: {
+                        year: year,
+                        month: month,
+                        departmentId: departmentId || null
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            table.clear();
+                            response.data.forEach(function (row) {
+                                const realized = parseFloat(row.realizedHours).toFixed(2);
+                                const expected = parseFloat(row.expectedHours).toFixed(2);
+                                const percent = parseFloat(row.percentages).toFixed(2);
+
+                                let color = 'green';
+                                if (percent < 80) color = 'red';
+                                else if (percent < 90) color = 'orange';
+
+                                const progressBar = `
+                                            <div class="progress">
+                                                <div class="progress-bar" style="width:${percent}%; background-color:${color};" title="${percent}%">
+                                                    ${percent}%
+                                                </div>
+                                            </div>`;
+
+                                table.row.add([
+                                    row.fullName,
+                                    expected,
+                                    realized,
+                                    progressBar
+                                ]);
+                            });
+
+                            table.draw();
+                        } else {
+                            alert("Veri alınamadı: " + response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        alert("Sunucu hatası: " + xhr.responseText);
+                    }
+                });
+            });
+
+            // Sayfa yüklenince ilk sorguyu çalıştır
+            $('#showButton').click();
+        });
+    </script>
+}
