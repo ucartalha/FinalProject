@@ -41,40 +41,66 @@ namespace DataAccess.Concrete
 
         public List<int> GetDurationByName(int Id, int month, int year, List<int> result)
         {
-            int day = 1;
             int duration2 = 0;
-            using (InputContext context = new InputContext())
+
+            using (var context = new InputContext())
             {
-                //var remote = context.ReaderDataDtos.Where(x => x.EmployeeDtoId == Id && x.StartDate.Value.Month == month && x.StartDate.Value.Year == year)
-                //    .Select(e => new { e.Duration ,e.StartDate.Value}).ToList();
-                //List<int?> duration=remote
-                //    .Select(e=>e.Duration) .ToList();
+                var employeeRecords = context.Personnals
+                    .FirstOrDefault(e => e.Id == Id);
 
-
-                var employeeRecords = context.EmployeeDtos
-                    .Include(e => e.ReaderDataDtos)
-                    .SingleOrDefault(e => e.Id == Id);
-                if (employeeRecords!=null)
+                if (employeeRecords != null)
                 {
-                   
-                    foreach (var item in employeeRecords.ReaderDataDtos)
+
+                    var queryResult = context.FinalVpnEmployees
+                   .Where(x => x.FirstRecord != null && x.FirstRecord.Month == month && x.FirstRecord.Year == year && x.RemoteEmployeeId == Id)
+                   .Select(x => new
+                   {
+                       x.FirstRecord.Year,
+                       x.FirstRecord.Month,
+                       x.FirstRecord.Day,
+                       x.Duration
+                   })
+                   .ToList();
+
+                    // Fetch data from the database
+
+                    // Group by day and calculate total duration in seconds
+                    var groupedResult = queryResult
+                        .GroupBy(x => new { x.Year, x.Month, x.Day })
+                        .Select(group => new
+                        {
+                            group.Key.Year,
+                            group.Key.Month,
+                            group.Key.Day,
+                            TotalDuration = group.Sum(x => x.Duration.TotalSeconds) // Calculate in memory
+                        })
+                        .ToList();
+
+                    // Select distinct days and their total duration
+                    var distinct2 = groupedResult
+                        .Select(item => new
+                        {
+                            Date = new DateTime(item.Year, item.Month, item.Day),
+                            TotalDuration = item.TotalDuration
+                        })
+                        .ToList();
+
+                    foreach (var item in groupedResult)
                     {
-                        if (item.StartDate.Value.Month==month && item.StartDate.Value.Year==year)
+                        if (item.Month == month && item.Year == year)
                         {
-                        if (item.StartDate.Value != item.StartDate.Value)
-                        {
-                            day += 1;
-                        }
-                            var duration1 = item.Duration;
-                            
-                            duration2 += (Int32)duration1;
+                            if (item.TotalDuration != 0)
+                            {
+                                duration2 += (int)item.TotalDuration;
+                            }
                         }
                     }
-                    int averageduration = duration2 / day;
+
+                    int averageduration = distinct2.Any() ? duration2 / distinct2.Count() : 0;
                     result.Add(averageduration);
+                    result.Add(distinct2.Count());
                 }
 
-                //result = result.Where(d => d != 0).ToList();
                 return result;
 
             }

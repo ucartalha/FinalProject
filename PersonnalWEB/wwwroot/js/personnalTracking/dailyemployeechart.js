@@ -1,481 +1,305 @@
-﻿
-@section Breadcrumbs{Personel Takip Sistemi / Grafikler / Kişi Bazlı Performans }
-@{
-    ViewBag.Title = "Kişi Bazlı Performans";
+﻿google.charts.load('current', { packages: ['corechart'] });
+
+var selectedDepartment = '';
+var selectedUserId = null;
+
+$("#userDropdown3").on("click", ".dropdown-item", function (event) {
+    var target = $(this); // Reference to the clicked item
+    target.addClass("active");
+
+    // Retrieve the data-id value from the clicked item
+    selectedUserId = parseInt(target.attr("data-id"));
+    selectedEmployeeName = target.text().trim();
+
+    // Log the values to check if they are correct
+    console.log("Selected User ID:", selectedUserId);
+    console.log("Selected Employee Name:", selectedEmployeeName);
+});
+
+function drawChartTitle(selectedUserName) {
+    var chartTitle = 'Çalışan: ' + selectedUserName;
+    document.getElementById('chartTitle').innerText = chartTitle;
 }
 
-@{
-    DateTime startDate = ViewBag.StartDate ?? (DateTime.Now).AddMonths(-1);
-    DateTime endDate = ViewBag.EndDate ?? DateTime.Now;
-    var startdate = startDate.ToString("yyyy-MM-dd");
-    var enddate = endDate.ToString("yyyy-MM-dd");
-    var employeeId = ViewBag.EmployeeId;
-    var employees = ViewBag.Model;
-}
+document.getElementById('submitButton-Vpn').addEventListener('click', function () {
+    var startDate = document.getElementById('date-input-vpn').value;
+    var endDate = document.getElementById('date-input-vpn2').value;
 
-<style>
-    .dropdown {
-        display: block;
-    }
+    var controllerUrl = '/PersonnalTracking/GetAllEmployeesWithParams?startDate=' + startDate + '&endDate=' + endDate + '&Id=' + selectedUserId;
 
-        .dropdown.show {
-            display: block;
+    fetch(controllerUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
         }
-</style>
-<link href="~/Content/libs/css/personnalTracking/TrackingStyle.css" rel="stylesheet" />
-<div class="row p-1">
-    <div class="panel-group m-b-0">
-        <div class="panel shadow-light-5 border-radius border-none">
-            <div class="panel-collapse collapse in">
-                <div class="panel-body p-1">
-                    <div class="row p-0 m-t-2 m-l-0 m-r-0 m-b-0">
-                        <div id="collapse1" class="panel-collapse collapse in">
-                            <div class="row" id="inputArea">
+    }).then(response => response.json())
+        .then(data => {
+            var chartDataMap = new Map();
 
-                                <div class="form-group col-md-2">
-
-                                    <div class="dropdown">
-                                        <label class="label-custom">Çalışanlar</label>
-                                        <input id="employee-search" type="text" class="form-control" placeholder="Çalışan Ara">
-
-                                        <ul class="dropdown-menu user-dropdown" id="userDropdown3" style="max-height: 200px; overflow-y: auto;">
-                                            <li><a class="dropdown-item" href="javascript:void(0)">Loading...</a></li>
-                                        </ul>
-                                    </div>
-
-                                </div>
-
-                                <div class="form-group col-md-3">
-                                    <label class="label-custom">Başlangıç Tarihi</label>
-                                    <input id="date-input-vpn" class="form-control input-md BaslangicTarihi" type="date">
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label class="label-custom">Bitiş Tarihi</label>
-                                    <input id="date-input-vpn2" class="form-control input-md BitisTarihi" type="date">
-                                </div>
-                                <div class="form-group m-t-3">
-                                    <button id="submitButton-Vpn" class="btn btn-success">
-                                        <i class="fa-solid fa-magnifying-glass"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-        </div>
-    </div>
-</div>
-
-
-<div class="row">
-    <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading ">
-
-                <i class="fa fa-bar-chart-o fa-fw"></i> Günlere Göre Ofis/Vpn Sayısı
-
-
-                <button id="fetchDataBtn" class="btn btn-primary">Detayları Getir</button>
-
-
-            </div>
-            <!-- /.panel-heading -->
-            <div class="panel-body">
-
-                <div id="dailyemployee_chart_div"></div>
-
-            </div>
-            <!-- /.panel-body -->
-        </div>
-        <!-- /.panel -->
-    </div>
-</div>
-
-
-<div class="row">
-    <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <i class="fa fa-bar-chart-o fa-fw"></i>  Tarih Aralığına Ait Ofis-VPN Grafiği
-            </div>
-            <!-- /.panel-heading -->
-            <div class="panel-body">
-                <div class="tab-content" id="myTabContent">
-                    <h4 class="card-title text-center font-weight-bold"></h4>
-                    <label id="selectedWeekRange" class="week-range-label"></label>
-                    <div id="chart-container">
-                        <div class="col-md-6">
-                            <div class=" mg-b-15 font-weight-bold" style="text-align: center;">Ofis Verileri</div>
-                            <div id="chart-tooltip">
-                                <div class="ht-200 ht-lg-250"><canvas id="chartBar1"></canvas></div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" mg-b-15 font-weight-bold" style="text-align: center;">VPN Verileri</div>
-                            <div id="chart-tooltip"></div>
-                            <div class="ht-200 ht-lg-250"><canvas id="chartBar2"></canvas></div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-        @*/.panel-body*@
-    </div>
-    @*/.panel*@
-</div>
-<div class="modal fade" id="lateDaysModal" tabindex="-1" role="dialog" aria-labelledby="lateDaysModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="lateDaysModalLabel">Geç Kalan Günler</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p id="lateDaysEmployeeName"></p>
-                <p id="lateDaysCount"></p>
-                <ul id="lateDaysList" class="list-group">
-                    <!-- Late days records will be appended here dynamically -->
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
-            </div>
-        </div>
-    </div>
-</div>
-<!--Modal -->
-
-<div class="modal fade" id="dataModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Veri Tablosu</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <table class="table table-bordered" id="dataTable">
-                    <thead>
-                        <tr>
-
-                            <th>Log Tarihi</th>
-                            <th>Ad</th>
-                            <th>Soyad</th>
-                            <th>Grup</th>
-                            <th>Giden Bayt</th>
-                            <th>Gelen Bayt</th>
-                            <th>Süre</th>
-                            <th>İlk Kayıt</th>
-                            <th>Son Kayıt</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Veriler buraya eklenecek -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="~/Content/libs/personnalTrackingjs/tracking-Chart.js"></script>
-<script src="https://www.gstatic.com/charts/loader.js"></script>
-
-
-<script>
-    function showLateDaysModal(employeeName, lateDays, lateRecords) {
-        $('#employeeName').text(employeeName);
-        $('#lateDays').text(lateDays);
-        var lateRecordsHtml = lateRecords.map(record => `<li>${record}</li>`).join('');
-        $('#lateRecords').html(lateRecordsHtml);
-        $('#lateDaysModal').modal('show');
-    }
-</script>
-
-<script>
-   window.onload = function() {
-    var startdate = '@startdate';
-    var enddate = '@enddate';
-
-    document.getElementById('date-input-vpn').value = startdate;
-    document.getElementById('date-input-vpn2').value = enddate;
-
-};
-</script>
-
-
-
-<script>
-    function capitalizeFirstLetter(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-    document.addEventListener("DOMContentLoaded", function () {
-        const dropdowns = [
-            { id: "userDropdown3", searchInputId: "employee-search" },
-        ];
-
-        dropdowns.forEach((dropdownData) => {
-            const userDropdown = document.getElementById(dropdownData.id);
-            const employeeSearch = document.getElementById(dropdownData.searchInputId);
-           let overshiftId = @Html.Raw(JsonConvert.SerializeObject(ViewBag.EmployeeId ?? 0));
-            let dropdownToggled = false;
-
-            function fetchData() {
-                // Your existing fetchData logic here
-            }
-
-            function updateDropdown() {
-                fetch('/PersonnalTracking/GetAllEmployee')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data && Array.isArray(data.data)) {
-                            let employeeData = data.data.map(employee => {
-                                let fullName = capitalizeFirstLetter(employee.firstName) + " " + capitalizeFirstLetter(employee.lastName);
-                                return { fullName, ...employee };
-                            });
-
-                            // Çalışan verilerini tam ada göre sırala
-                            employeeData.sort((a, b) => a.fullName.localeCompare(b.fullName));
-                            userDropdown.innerHTML = "";
-                            var searchQuery = employeeSearch.value.toLowerCase();
-
-                            employeeData.forEach(employee => {
-                                if (employee.fullName.toLowerCase().includes(searchQuery)) {
-                                    var employeeItem = document.createElement("li");
-                                    var employeeLink = document.createElement("a");
-                                    employeeLink.classList.add("dropdown-item");
-                                    employeeLink.href = "javascript:void(0)";
-                                    employeeLink.textContent = employee.fullName;
-                                    employeeLink.setAttribute("data-id", employee.id);
-
-                                    if (employee.id === overshiftId) {
-                                        employeeLink.classList.add("active");
-                                        employeeSearch.value = employee.fullName;
-                                            employeeSearch.click();
-
-                                        setTimeout(() => {
-                                            const firstEmployeeLink = userDropdown.querySelector(".dropdown-item");
-                                            if (firstEmployeeLink) {
-                                                firstEmployeeLink.click();
-                                            }
-                                        }, 60);
-                                    }
-
-                                    employeeLink.addEventListener("click", function () {
-                                        var employees = userDropdown.querySelectorAll(".dropdown-item");
-                                        employees.forEach(employee => {
-                                            employee.classList.remove("active");
-                                        });
-
-                                        this.classList.add("active");
-                                        overshiftId = this.getAttribute("data-id");
-
-                                        employeeSearch.value = employee.fullName;
-                                        fetchData();
-
-                                        userDropdown.classList.remove("show");
-                                        dropdownToggled = false;
-                                    });
-
-                                    employeeItem.appendChild(employeeLink);
-                                    userDropdown.appendChild(employeeItem);
-                                }
-                            });
-                        } else {
-                            console.error("Invalid data format:", data);
-                            userDropdown.innerHTML = "<li><a class='dropdown-item' href='javascript:void(0)'>Error loading data</a></li>";
-                        }
-                    })
-                    .catch(error => {
-                        console.error("An error occurred:", error);
-                        userDropdown.innerHTML = "<li><a class='dropdown-item' href='javascript:void(0)'>Error loading data</a></li>";
-                    });
-            }
-
-            userDropdown.addEventListener("click", function (event) {
-                if (!dropdownToggled) {
-                    userDropdown.classList.add("show");
-                    dropdownToggled = true;
+            data.data.forEach(entry => {
+                var date;
+                if (entry.date) {
+                    date = new Date(entry.date).toLocaleDateString();
                 } else {
-                    userDropdown.classList.remove("show");
-                    dropdownToggled = false;
+                    date = new Date(entry.vpnFirstRecord).toLocaleDateString();
+                }
+                if (!chartDataMap.has(date)) {
+                    chartDataMap.set(date, {
+                        officeHours: [],
+                        vpnHours: [],
+                        lateDays: 0
+                    });
+                }
+                chartDataMap.get(date).officeHours.push(entry.workingHour ? calculateHours(entry.workingHour) : 0);
+                if (entry.duration) {
+                    chartDataMap.get(date).vpnHours.push(calculateHours(entry.duration));
+                }
+                if (isLate(entry.firstRecord, entry.vpnFirstRecord)) {
+                    chartDataMap.get(date).lateDays = 1; // Aynı gün içinde birden fazla geç kalma durumu olmaması için
                 }
             });
 
-            document.addEventListener("click", function (event) {
-                if (dropdownToggled && !userDropdown.contains(event.target)) {
-                    userDropdown.classList.remove("show");
-                    dropdownToggled = false;
-                }
-            });
+            var chartDataArray = Array.from(chartDataMap.entries()).map(([date, totals]) => ({
+                date: date,
+                officeHours: totals.officeHours.reduce((acc, cur) => acc + cur, 0),
+                vpnHours: totals.vpnHours.reduce((acc, cur) => acc + cur, 0),
+                lateDays: totals.lateDays,
+                totalHours: totals.officeHours.reduce((acc, cur) => acc + cur, 0) + totals.vpnHours.reduce((acc, cur) => acc + cur, 0)
+            }));
 
-            employeeSearch.addEventListener("input", function () {
-                userDropdown.classList.add("show");
-                updateDropdown();
-            });
+            var sortedDataArray = chartDataArray.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            employeeSearch.addEventListener("click", function () {
-                userDropdown.classList.add("show");
-                updateDropdown();
-            });
+            // Toplam geç kalınan gün sayısını hesaplayın
+            var totalLateDays = sortedDataArray.reduce((acc, cur) => acc + cur.lateDays, 0);
 
-            userDropdown.addEventListener("click", function () {
-                if (event.target.classList.contains("dropdown-item")) {
-                    userDropdown.classList.remove("show");
-                    dropdownToggled = false;
-                }
-            });
-
-            document.addEventListener("click", function (event) {
-                if (dropdownToggled && !userDropdown.contains(event.target)) {
-                    userDropdown.classList.remove("show");
-                    dropdownToggled = false;
-                }
-            });
-
-            updateDropdown();
+            drawDailyEmployeeChart(sortedDataArray, startDate, endDate, totalLateDays);
+        })
+        .catch(error => {
+            console.error('Veri alınamadı:', error);
         });
-    });
-</script>
+});
 
-<script>
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('tr-TR'); // Türkçe tarih formatı
+}
 
-    var selectedUserId = null;
-    var selectedEmployeeName = null;
+function calculateHours(timeString) {
+    if (!timeString) {
+        return 0;
+    }
+    var timeArray = timeString.split(":");
+    return parseFloat(timeArray[0]) + parseFloat(timeArray[1]) / 60 + parseFloat(timeArray[2]) / 3600;
+}
 
-    $("#userDropdown3").on("click", ".dropdown-item", function (event) {
-        var target = $(this); // Tıklanan öğeyi referans al
-        $("#userDropdown3 .dropdown-item").removeClass("active");
-        target.addClass("active");
-        // Tıklanan öğenin üst öğesindeki data-id değerini al
-        selectedUserId = parseInt(target.closest('.dropdown').attr("data-id"));
-        selectedEmployeeName = target.text().trim();
-        $('#userDropdown3').text(selectedEmployeeName); // Buton metnini güncelle
-    });
+function isLate(firstRecord, vpnFirstRecord) {
+    // Ofis kaydı için geç kalma durumu
+    var firstRecordTime = new Date(firstRecord).getHours() + (new Date(firstRecord).getMinutes() / 60);
 
-    $('#fetchDataBtn').on('click', function () {
-        var startDate = document.getElementById('date-input-vpn').value;
-        var endDate = document.getElementById('date-input-vpn2').value;
-        if ($.fn.DataTable.isDataTable('#dataTable')) {
-            $('#dataTable').DataTable().clear().destroy();
+    var vpnFirstRecordTime = new Date(vpnFirstRecord).getHours() + (new Date(vpnFirstRecord).getMinutes() / 60);
+    if (firstRecord != null && vpnFirstRecord == null) {
+
+        if (firstRecordTime !== null && firstRecordTime > 8.5) {
+            return true; // Not late if the office record is on time
         }
-        if (!selectedUserId) {
-            alert('Lütfen bir kullanıcı seçin.');
-            return;
-        }
-
-        if (!startDate || !endDate) {
-            alert('Lütfen tarih aralığını seçin.');
-            return;
+    }
+    // VPN kaydı için geç kalma durumu
+    if (vpnFirstRecord != null && firstRecord == null) {
+        // Check if the VPN record exists and is on time
+        if (vpnFirstRecordTime !== null && vpnFirstRecordTime > 8.5) {
+            return true; // Not late if the VPN record is on time
         }
 
-        $.ajax({
-            url: '/PersonnalTracking/GetAllDetails',
-            method: 'GET',
-            data: {
-                startDate: startDate,
-                endDate: endDate,
-                empId: selectedUserId
-            },
-            success: function (response) {
-                // Modal içindeki tabloya verileri ekleyin
-                let tableBody = $('#dataTable tbody');
-                tableBody.empty(); // Önceki verileri temizle
-
-                response.data.forEach(function (item) {
-                    let row = `<tr>
-                    <td>${new Date(item.logDate).toLocaleString().split(" ")[0]}</td>
-                    <td>${item.firstName}</td>
-                    <td>${item.lastName}</td>
-                    <td>${item.group}</td>
-                    <td>${item.bytesout}</td>
-                    <td>${item.bytesin}</td>
-                    <td>${secondsToTime(item.duration)}</td>
-                    <td>${new Date(item.firstRecord).toLocaleString()}</td>
-                    <td>${new Date(item.lastRecord).toLocaleString()}</td>
-                </tr>`;
-                    tableBody.append(row);
-                });
-
-                $('#dataTable').DataTable({
-                    language: {
-                        url: '/Content/Turkish.json'  // Türkçe dil dosyasının yolu
-                    },
-                    dom: 'Bfrtip',
-                    buttons: [
-                        {
-                            extend: 'excelHtml5',
-                            filename: "Calisanlar ",
-                            title: null,
-                            autoFilter: true,
-                            className: 'btn btn-dark-green-1 text-white',
-                            text: 'Rapor Kaydet',
-                            customizeData: function (data) {
-                                for (var i = 0; i < data.body.length; i++) {
-                                    for (var j = 0; j < data.body[i].length; j++) {
-                                        data.body[i][j] = '\0' + data.body[i][j];
-                                    }
-                                }
-                            },
-                            action: function (e, dt, node, config) {
-
-
-                                ShowLoading();
-
-
-                                var that = this;
-
-
-                                setTimeout(function () {
-                                    $.fn.dataTable.ext.buttons.excelHtml5.action.call(that, e, dt, node, config);
-
-
-                                    HideLoading();
-
-
-                                }, 500);
-                            }
-                        }
-                    ]
-                });
-                // Modal'ı göster
-                $('#dataModal').modal('show');
-            },
-            error: function () {
-                alert('Veri alınırken bir hata oluştu.');
-            }
-        });
-    });
-
-</script>
-<script>
-    function secondsToTime(seconds) {
-        var hours = Math.floor(seconds / 3600);
-        var minutes = Math.floor((seconds % 3600) / 60);
-        // Saat ve dakika değerlerini string olarak formatlayarak döndürme
-        return hours.toString().padStart(2, '0') + ':' + minutes.toString().padStart(2, '0');
     }
 
-    // Örnek kullanım
-    var totalSeconds = 45023; // Örneğin, 12:30:23 saniye cinsinden
-    var timeString = secondsToTime(totalSeconds);
-    console.log(timeString); // Çıktı: "12:30"
-</script>
-<script src="~/Content/libs/personnalTrackingjs/dailyemployeechart.js"></script>
-<script src="~/Content/libs/personnalTrackingjs/employeeChart.js"></script>
+    if (vpnFirstRecord != null && firstRecord != null) {
+        if (vpnFirstRecordTime != null && vpnFirstRecordTime > 8.5 && firstRecordTime > 8.5) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    return false;
+}
+function parseDate(dateString) {
+    var parts = dateString.split('.');
+    // Gün, Ay, Yıl sırasına göre tarih parçalarını ayrıştır
+    if (parts.length === 3) {
+        var day = parseInt(parts[0], 10);
+        var month = parseInt(parts[1], 10) - 1; // Ay 0-11 aralığında olmalı
+        var year = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+    }
+    return null; // Geçersiz format
+}
+
+function drawDailyEmployeeChart(chartDataArray, startDate, endDate, totalLateDays) {
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Tarih');
+    data.addColumn('number', 'Ofis Süresi (saat)');
+    data.addColumn('number', 'VPN Süresi (saat)');
+    data.addColumn('number', 'Geç Kaldı (gün)');
+    data.addColumn({ type: 'string', role: 'style' }); // For late bar color
+    data.addColumn('number', 'Toplam Çalışma Süresi');
+    data.addColumn({ type: 'string', role: 'style' }); // For total hours style
+
+    chartDataArray.forEach(entry => {
+        var dateParts = entry.date.split(".");
+        var day = parseInt(dateParts[0], 10);
+        var month = parseInt(dateParts[1], 10) - 1;
+        var year = parseInt(dateParts[2], 10);
+        var date = new Date(year, month, day);
+
+        // Gün numarasını al
+        var dayOfWeek = date.getDay();
+        // Haftasonu kontrolü
+        var isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        var dateString = date.toLocaleDateString('tr-TR');
+
+        if (isWeekend) {
+            dateString += ' (H.S)';
+        }
+
+
+        var lateBarColor = entry.lateDays > 0 ? (isWeekend ? 'blue' : 'red') : 'transparent';
+        var totalHoursStyle = entry.totalHours > 9.5 ? 'point { size: 10; shape-type: circle; fill-color: green; }' : null;
+
+        data.addRow([dateString, entry.officeHours, entry.vpnHours, entry.lateDays, lateBarColor, entry.totalHours, totalHoursStyle]);
+    });
+
+    var options = {
+        html: true,
+        title: selectedEmployeeName + " " + '`in Günlük Ortalama Ofis ve VPN Süreleri ile Geç Kaldığı Gün Sayısı Tarih Aralığı: ' + startDate + ' - ' + endDate + ' (Toplam Geç Kalınan Gün: ' + totalLateDays + ')',
+        isStacked: true,
+        hAxis: {
+            title: 'Tarih',
+            slantedText: true,
+            slantedTextAngle: 45,
+            textStyle: {
+                fontSize: 12 // Yazı boyutunu küçült
+            }
+        },
+        vAxis: {
+            title: 'Toplam Süreler (saat)'
+        },
+        seriesType: 'bars',
+        colors: ['#833ab4', '#F27121'],
+        series: {
+            2: {
+                type: 'scatter',
+                pointShape: 'circle',
+                pointSize: 10,
+                color: 'transparent'
+            },
+            3: {
+                type: 'scatter',
+                pointShape: 'circle',
+                pointSize: 10,
+                color: 'transparent'
+            }
+        },
+        legend: { position: 'top' }
+    };
+
+    var chart = new google.visualization.ComboChart(document.getElementById('dailyemployee_chart_div'));
+
+    google.visualization.events.addListener(chart, 'select', function () {
+        var selection = chart.getSelection();
+        if (selection.length > 0) {
+            var selectedRow = selection[0].row;
+
+            var selectedDate = data.getValue(selectedRow, 0);
+            var selectedOfficeHours = data.getValue(selectedRow, 1);
+            var selectedVpnHours = data.getValue(selectedRow, 2);
+            var selectedLateDays = data.getValue(selectedRow, 3);
+
+            // Show modal with details
+            showDetailsModal(selectedDate, selectedOfficeHours, selectedVpnHours, selectedLateDays, startDate, endDate);
+        }
+    });
+
+    chart.draw(data, options);
+}
 
 
 
+
+function showDetailsModal(selectedDate, officeHours, vpnHours, lateDays, startDate, endDate) {
+    // Ofis süresi için saat formatını düzenle
+    var formattedOfficeHours = officeHours.toFixed(2);
+    // VPN süresi için saat formatını düzenle
+    var formattedVpnHours = vpnHours ? vpnHours.toFixed(2) : '0.00'; // VPN süresi undefined ise '0.00' olarak belirtilir
+
+    // Tarih formatını ayarla
+    var formattedDate = new Date(selectedDate).toLocaleDateString();
+    var controllerUrl = '/PersonnalTracking/GetAllEmployeesWithParams?startDate=' + startDate + '&endDate=' + endDate + '&Id=' + selectedUserId;
+
+    fetch(controllerUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(response => response.json())
+        .then(data => {
+
+            var details = data.data.find(entry => {
+                var entryDate = entry.date ? new Date(entry.date).toLocaleDateString('tr-TR') : new Date(entry.vpnFirstRecord).toLocaleDateString('tr-TR');
+
+                // "H.S" kısmını silmek için
+                var cleanSelectedDate = selectedDate.replace(' (H.S)', '').trim();
+
+                return entryDate === cleanSelectedDate ||
+                    (entry.vpnFirstRecord && new Date(entry.vpnFirstRecord).toLocaleDateString('tr-TR') === cleanSelectedDate);
+            });
+
+            // Ofis ve VPN kayıtlarını formatla
+            var officeFirstRecord = details ? (details.firstRecord ? new Date(details.firstRecord).toLocaleTimeString() : '') : '';
+            var officeLastRecord = details ? (details.lastRecord ? new Date(details.lastRecord).toLocaleTimeString() : '') : '';
+            var vpnFirstRecord = details ? (details.vpnFirstRecord ? new Date(details.vpnFirstRecord).toLocaleTimeString() : '') : '';
+            var vpnLastRecord = details ? (details.vpnLastRecord ? new Date(details.vpnLastRecord).toLocaleTimeString() : '') : '';
+            // Ofis ve VPN kayıtlarını kontrol ederek formatla
+            officeFirstRecord = officeFirstRecord || 'Kayıt yok';
+            officeLastRecord = officeLastRecord || 'Kayıt yok';
+            vpnFirstRecord = vpnFirstRecord || 'Kayıt yok';
+            vpnLastRecord = vpnLastRecord || 'Kayıt yok';
+
+            var modalContent = `
+       <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
+           <div class="modal-dialog" role="document">
+           <div class="modal-content">
+              <div class="modal-header">
+               <h5 class="modal-title" id="detailsModalLabel">Detaylar - ${selectedDate}</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+              </div>
+              <div class="modal-body">
+              <p>Ofis Başlangıç Saati: ${officeFirstRecord}</p>
+              <p>Ofis Bitiş Saati: ${officeLastRecord}</p>
+              <p>VPN Başlangıç Saati: ${vpnFirstRecord}</p>
+              <p>VPN Bitiş Saati: ${vpnLastRecord}</p>
+              <p>Ofis Süresi: ${formattedOfficeHours} saat</p>
+               <p>VPN Süresi: ${formattedVpnHours} saat</p>
+              <p>Geç Kaldığı Gün Sayısı: ${lateDays}</p>
+              </div>
+              <div class="modal-footer">
+              
+              </div>
+          </div>
+          </div>
+       </div>
+       `;
+
+            // Modalı temizle
+            $('#detailsModal').remove();
+
+            // Modalı ekleyin
+            $('body').append(modalContent);
+
+            // Modalı göster
+            $('#detailsModal').modal('show');
+        })
+        .catch(error => {
+            console.error('Detaylar alınamadı:', error);
+        });
+}

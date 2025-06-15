@@ -1,19 +1,20 @@
-﻿function fetchPerformanceData(startDate, endDate, departmentId) {
+﻿
+function fetchPerformanceData(startDate, endDate, departmentId) {
     const url = `/PersonnalTracking/GetAllEmployeesWithParams?startDate=${startDate}&endDate=${endDate}&departmentId=${departmentId}`;
+
     fetch(url)
         .then(res => res.json())
         .then(response => {
-            const data = response.data || response; // camelCase JSON’dan dolayı
+            const data = response.data || response; // camelCase dönüşümü
             const chartData = processChartData(data);
             drawChart(chartData);
-            fillTable(chartData);
+            fillTable(chartData); // Eğer yoksa, bu fonksiyonu eklemelisin ya da çağrıyı kaldırmalısın
         })
         .catch(err => console.error("Veri alınamadı:", err));
 }
 
 function processChartData(data) {
     const result = [];
-
     const grouped = {};
 
     data.forEach(item => {
@@ -47,17 +48,28 @@ function timeStringToHours(str) {
     return h + (m / 60) + (s / 3600);
 }
 
-function drawChart(chartData) {
-    const ctx = document.getElementById("departmentChart").getContext("2d");
-    const labels = chartData.map(x => x.fullName);
-    const office = chartData.map(x => x.officeHours.toFixed(2));
-    const vpn = chartData.map(x => x.vpnHours.toFixed(2));
+// Grafik cache kontrolü
+let departmentChartInstance = null;
 
-    if (window.performanceChart) {
-        window.performanceChart.destroy();
+function drawChart(chartData) {
+    const canvas = document.getElementById("departmentChart");
+    if (!canvas) {
+        console.error("departmentChart canvas elementi bulunamadı.");
+        return;
     }
 
-    window.performanceChart = new Chart(ctx, {
+    const ctx = canvas.getContext("2d");
+
+    const labels = chartData.map(x => x.fullName);
+    const office = chartData.map(x => Number(x.officeHours.toFixed(2)));
+    const vpn = chartData.map(x => Number(x.vpnHours.toFixed(2)));
+
+    // Önceki chart varsa yok et
+    if (departmentChartInstance) {
+        departmentChartInstance.destroy();
+    }
+
+    departmentChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
@@ -76,6 +88,7 @@ function drawChart(chartData) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'top'
@@ -83,6 +96,11 @@ function drawChart(chartData) {
                 title: {
                     display: true,
                     text: 'Çalışanların Ofis & VPN Süreleri'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
         }

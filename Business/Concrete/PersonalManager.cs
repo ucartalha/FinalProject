@@ -74,86 +74,96 @@ namespace Business.Concrete
                 List<PersonalDto> personalList = new List<PersonalDto>();
                 DateTime currentDate = DateTime.Now;
                 int currentYear = year;
-                int previousMonth1 = month - 1;
-                int previousMonth2 = month - 2;
                 int previousYear = year - 1;
-
-                if (previousMonth1 <= 0)
-                {
-                    previousMonth1 += 12;
-                    previousMonth2 += 12;
-                    currentYear = previousYear;
-                }
-
-                List<int> result = new List<int>();
-                int resultIndex = 0;
 
                 for (int i = 0; i < 3; i++)
                 {
                     int targetMonth = month - i;
+                    int targetYear = year;
+
                     if (targetMonth <= 0)
                     {
                         targetMonth += 12;
-                        currentYear = previousYear;
+                        targetYear = previousYear;
                     }
 
                     if (month == 1)
                     {
-                        year = previousYear + 1;
+                        targetYear = previousYear + 1;
                     }
 
-                    result = _remoteEmployee.GetDurationByName(Id, targetMonth, year, result);
-                    var workingResult = _employeeDal.GetWorkingHoursByName(Id, targetMonth, year);
+                    // Her ay için yeni result listesi başlatılır
+                    var result = _remoteEmployee.GetDurationByName(Id, targetMonth, targetYear, new List<int>());
+                    var workingHour = _employeeDal.GetWorkingHoursByName(Id, targetMonth, targetYear);
+                    List<TimeSpan> workingHours = workingHour.Data;
 
-                    List<TimeSpan> workingHours = workingResult.Data;
-
-                    if ((workingHours?.Count ?? 0) > 0 || (result?.Count ?? 0) > 0)
+                    if ((workingHours.Count > 0) || (result.Count > 0))
                     {
+                        // Toplam ofis süresi
                         TimeSpan totalHours = TimeSpan.Zero;
-                        foreach (TimeSpan hour in workingHours)
+                        foreach (var hour in workingHours)
                         {
                             totalHours += hour;
                         }
 
+                        // Ortalama saat hesaplama
                         TimeSpan monthlyAverage = TimeSpan.Zero;
-                        if (totalHours.Ticks != 0 && workingHours.Count != 0)
+                        if (workingHours.Count > 0 && totalHours.Ticks > 0)
                         {
                             monthlyAverage = TimeSpan.FromTicks(totalHours.Ticks / workingHours.Count);
                         }
 
-                        while (resultIndex < result.Count)
+                        // Hem VPN hem Ofis varsa — çiftler halinde okur
+                        for (int resultIndex = 0; resultIndex + 1 < result.Count; resultIndex += 2)
                         {
-                            if (resultIndex + 1 >= result.Count)
-                                break;
-
-                            PersonalDto personal = new PersonalDto
+                            var personal = new PersonalDto
                             {
                                 Id = Id,
                                 AverageHour = monthlyAverage,
                                 OfficeDay = workingHours.Count,
                                 RemoteHour = result[resultIndex],
                                 VpnDay = result[resultIndex + 1],
-                                Date = new DateTime(currentYear, targetMonth, 1)
+                                Date = new DateTime(targetYear, targetMonth, 1)
                             };
 
                             personalList.Add(personal);
-                            resultIndex += 2;
+                        }
+
+                        // Eğer sadece ofis verisi varsa ve VPN hiç yoksa da ekle
+                        if (result.Count == 0 && workingHours.Count > 0)
+                        {
+                            var personal = new PersonalDto
+                            {
+                                Id = Id,
+                                AverageHour = monthlyAverage,
+                                OfficeDay = workingHours.Count,
+                                RemoteHour = 0,
+                                VpnDay = 0,
+                                Date = new DateTime(targetYear, targetMonth, 1)
+                            };
+
+                            personalList.Add(personal);
                         }
                     }
                 }
 
                 if (personalList.Count > 0)
                 {
-                    return new SuccessDataResult<List<PersonalDto>>(personalList, "Önceki 3 ayın ortalama saatleri başarıyla hesaplandı.");
+                    return new SuccessDataResult<List<PersonalDto>>(personalList, "İsimle eşleşen çalışma saatleri başarıyla bulundu.");
                 }
-
-                return new ErrorDataResult<List<PersonalDto>>("İsimle eşleşen çalışma saatleri bulunamadı.");
+                else
+                {
+                    return new ErrorDataResult<List<PersonalDto>>(personalList, "İsimle eşleşen çalışma saatleri bulunamadı.");
+                }
             }
             catch (Exception ex)
             {
                 return new ErrorDataResult<List<PersonalDto>>($"Hata oluştu: {ex.Message}");
             }
         }
+
+
+
 
         public IDataResult<List<TopPersonnalDto>> ProcessMonthlyAverageBestPersonal(int month, int year, int departmentId)
         {
