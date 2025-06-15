@@ -1,0 +1,168 @@
+﻿#departmentcount_chart_div rect, #dailyemployee_chart_div rect {
+    rx: 5px;
+    ry: 5px;
+}
+
+#department_chart_div rect, #chart_div rect {
+    rx: 3px;
+    ry: 3px;
+}
+
+.chart-widget {
+    height: 400px;
+    background-color: transparent;
+    padding: 10px;
+    cursor: pointer;
+}
+
+#dailyemployee_chart_div,
+#employee_chart_div {
+    width: 100%;
+    height: 600px; /* Grafik yüksekliğini 600 piksel olarak ayarlayın */
+}
+
+#dataModal .modal-dialog.modal-lg {
+    width: 80%;
+}
+
+#fetchDataBtn {
+    float: right;
+    margin: -7px;
+}
+
+#submitButton-Vpn, #fetchDataBtn {
+    background-color: transparent;
+    border-color: #833ab4;
+    color: #833ab4;
+    font-weight: bold;
+}
+
+#aktarbtn {
+    width: 50px;
+    height: 50px;
+    background-color: transparent;
+    border-color: #833ab4;
+    border-radius: 50%;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    transition: transform 0.3s ease, width 0.3s ease; /* Geçiş efektleri */
+    z-index: 1000; /* Diğer öğelerin üzerinde kalması için z-index değeri */
+
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #833ab4;
+    font-weight: bolder;
+    font-size: 16px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Gölge efekti */
+}
+
+    #aktarbtn .fa {
+        font-size: 20px; /* FontAwesome ikonunun boyutu */
+    }
+
+    #aktarbtn .text {
+        display: none; /* Başlangıçta metni gizle */
+    }
+
+    #aktarbtn:hover {
+        width: 20%; /* Üzerine gelindiğinde genişlik artışı */
+    }
+
+        #aktarbtn:hover .fa {
+            display: none; /* Üzerine gelindiğinde ikonu gizle */
+        }
+
+        #aktarbtn:hover .text {
+            display: block; /* Üzerine gelindiğinde metni göster */
+        }
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+
+.chart-container {
+    width: 80%;
+    height: 80%;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: auto;
+}
+
+
+.overlay.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#inputArea {
+    display: flex;
+    justify-content: space-between;
+}
+
+#graphic-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+#departmentcount_chart_div {
+    width: 100%;
+    height: 500px !important; /* Grafik yüksekliğini 600 piksel olarak ayarlayın */
+}
+
+#chart-container {
+    overflow-y: auto; /* Dikey kaydırma çubuğunu göstermek için */
+    max-height: 400px; /* Maksimum yüksekliği belirleyin veya gerektiği gibi ayarlayın */
+}
+
+#department_chart_div,
+#employee_chart_div {
+    width: 100%;
+    height: 1800px;
+    /* Grafik yüksekliğini 600 piksel olarak ayarlayın */
+}
+
+@media only screen and (max-width: 600px) {
+    #inputArea, #graphic-container {
+        display: block !important;
+    }
+}
+
+.glyphicon.spinning {
+    animation: spin 1s infinite linear;
+    -webkit-animation: spin2 1s infinite linear;
+}
+
+@keyframes spin {
+    from {
+        transform: scale(1) rotate(0deg);
+    }
+
+    to {
+        transform: scale(1) rotate(360deg);
+    }
+}
+
+@-webkit-keyframes spin2 {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}

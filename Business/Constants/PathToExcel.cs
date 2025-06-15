@@ -8,6 +8,6 @@ namespace Business.Constants
 {
     public static class PathToExcel
     {
-        public static string ExcelPath = "C:\\Users\\talha.ucar\\source\\repos\\MetropolInputProject\\WebAPI\\uploads\\";
+        public static string ExcelPath = "C:\\Users\\talha.ucar\\source\\repos\\PRoject\\WebAPI\\uploads\\";
     }
 }

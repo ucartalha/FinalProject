@@ -1,161 +1,1374 @@
-﻿@{
-    ViewData["Title"] = "Departman Bazlı Performans";
-    Layout = "_Layout";
+﻿@using Entities.DTOs
+@section Breadcrumbs {
+Personel Takip Sistemi / Grafikler / Departman Bazlı Performans
 }
+@{
+    ViewBag.Title = "Departman Bazlı Performans";
+}
+@model List<DepartmentDto>
 
 @section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="~/css/personnalTracking/TrackingStyle.css" rel="stylesheet" />
+    <link href="~/css/chart.css" rel="stylesheet" />
 }
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script src="~/js/personnalTracking/performanceByDepartment.js"></script>
+    <script>
+        $(document).ready(function () {
+            function loadDepartments() {
+                $.getJSON("/PersonnalTracking/GetDepartments", function (res) {
+                    const departments = res.data;
+                    const $deptSelect = $('#departmentSelect');
+                    departments.forEach(d => {
+                        $deptSelect.append(`<option value="${d.id}">${d.name}</option>`);
+                    });
+                });
+            }
+
+            function loadEmployees() {
+                $.getJSON("/PersonnalTracking/GetAllEmployee", function (res) {
+                    const employees = res.data;
+                    const $empSelect = $('#employeeSelect');
+                    employees.forEach(emp => {
+                        $empSelect.append(`<option value="${emp.id}">${emp.firstName} ${emp.lastName}</option>`);
+                    });
+                    $empSelect.select2({
+                        placeholder: "Çalışan Seçin",
+                        allowClear: true,
+                        width: '100%'
+                    });
+                });
+            }
+
+            loadDepartments();
+            loadEmployees();
+        });
+    </script>
+    <script src="/js/personnalTracking/performanceByDepartment.js"></script>
 }
 
-<div class="container mt-4">
-    <h2>Departman Bazlı Performans</h2>
+<style>
+    .chart-container {
+        min-height: 400px;
+        min-width: 100%;
+    }
 
-    <div class="row mt-3">
-        <div class="col-md-3">
-            <label>Departman</label>
+    .google-visualization-tooltip {
+        margin-left: -150px !important;
+        min-width: 300px !important;
+    }
+
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="departmentSelect">Departman</label>
             <select id="departmentSelect" class="form-control">
                 <option value="">Tümü</option>
-                <!-- JS ile dolacak -->
             </select>
         </div>
-
-        <div class="col-md-2">
-            <label>Başlangıç Tarihi</label>
-            <input type="date" id="startDate" class="form-control" />
-        </div>
-
-        <div class="col-md-2">
-            <label>Bitiş Tarihi</label>
-            <input type="date" id="endDate" class="form-control" />
-        </div>
-
-        <div class="col-md-3">
-            <label>Grafik Tipi</label>
-            <select id="chartType" class="form-control">
-                <option value="chartjs">Chart.js</option>
-                <option value="google">Google Charts</option>
+        <div class="col-md-4">
+            <label for="employeeSelect">Çalışan</label>
+            <select id="employeeSelect" class="form-control">
+                <option value="">Tümü</option>
             </select>
         </div>
+    </div>
 
-        <div class="col-md-2 d-grid">
-            <label>&nbsp;</label>
-            <button id="btnFilter" class="btn btn-success">
-                <i class="fa fa-search"></i> Sorgula
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="date-input-vpn">Başlangıç Tarihi</label>
+            <input id="date-input-vpn" class="form-control" type="date" />
+        </div>
+        <div class="col-md-6">
+            <label for="date-input-vpn2">Bitiş Tarihi</label>
+            <input id="date-input-vpn2" class="form-control" type="date" />
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <button id="submitButton-Vpn" class="btn btn-success w-100">
+                <i class="fa-solid fa-magnifying-glass"></i> Verileri Getir
             </button>
         </div>
     </div>
 
-    <hr />
-
-    <div class="row text-center">
-        <div class="col-md-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <i class="fa fa-smile fa-3x"></i>
-                    <h4 id="GetCustomerAmountByStatutrue" class="mt-2">-</h4>
-                    <span>Toplam Çalışma Saati</span>
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 id="department-heading">Departmana ait en çok çalışan 5 kişi</h5>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-warning text-dark">
                 <div class="card-body">
-                    <i class="fa fa-users fa-3x"></i>
-                    <h4 id="GetCustomerAmount" class="mt-2">-</h4>
-                    <span>Çalışan Kişi Sayısı</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <i class="fa fa-clock fa-3x"></i>
-                    <h4 id="GetDiscountAmount" class="mt-2">-</h4>
-                    <span>Ortalama Çalışma Saati</span>
+                    <table id="employeeTable" class="table table-striped table-bordered w-100">
+                        <thead>
+                            <tr>
+                                <th>İsim Soyisim</th>
+                                <th>Toplam Çalışma Saati</th>
+                                <th>Hafta İçi Ortalama</th>
+                                <th>Hafta Sonu Ortalama</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- CHART SECTION -->
-    <div class="row mt-4">
+    <div class="row mb-4">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    Günlere Göre Ofis/VPN Sayısı
+                    <i class="fa fa-bar-chart-o fa-fw"></i> Günlere Göre Ofis/VPN Sayısı
                 </div>
-                <div class="card-body">
-                    <div id="chartContainer">
-                        <canvas id="departmentChart" height="100"></canvas>
-                        <div id="department_chart_div" style="display:none; width:100%; height:500px;"></div>
-                        <div class="text-center mt-2" style="display:none;" id="chartPager">
-                            <button id="prevButton" class="btn btn-secondary btn-sm me-2">← Önceki</button>
-                            <button id="nextButton" class="btn btn-secondary btn-sm">Sonraki →</button>
+                <div class="card-body chart-container">
+                    <div id="departmentcount_chart_div"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <button class="btn btn-outline" id="aktarbtn" onclick="aktar()">
+                        <i class="fa fa-right-left"></i>
+                        <span class="text">Aynı Tarih Aralığında Kişi Bazlı Veriler</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa fa-bar-chart-o fa-fw"></i> Tarih Aralığına Ait Departman Grafiği
+                </div>
+                <div class="card-body chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label id="selectedWeekRange" class="week-range-label"></label>
+                        <div>
+                            <button class="btn btn-outline btn-blue-light" id='prevButton'>Prev</button>
+                            <button class="btn btn-outline btn-blue-light ms-2" id='nextButton'>Next</button>
                         </div>
+                    </div>
+                    <div id="chart-container">
+                        <div id="department_chart_div"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- PERFORMANCE TABLE -->
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    Çalışanların Performansı
-                </div>
-                <div class="card-body">
-                    <table id="performanceTable" class="table table-striped table-bordered w-100">
-                        <thead>
-                            <tr>
-                                <th>Ad Soyad</th>
-                                <th>Toplam Saat</th>
-                                <th>Ofis Saat</th>
-                                <th>VPN Saat</th>
-                                <th>Geç Kalma</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- JS ile dolacak -->
-                        </tbody>
-                    </table>
+<div style="position: fixed; bottom: 20px; right: 20px;">
+    <button style="width:50px;height:50px" type="button" class="btn btn-secondary" id="scrollToTopButton" onclick="scrollToTop()">
+        <i class="fa fa-turn-up"></i>
+    </button>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+
+                <div>
+                    <button class="btn btn-outline" id="aktarbtn" onclick="aktar()"><i class="fa  fa-right-left"></i><span class="text">Aynı Tarih Aralığında Kişi Bazlı Veriler</span></button>
                 </div>
             </div>
+            <!-- /.panel-heading -->
+            <!-- /.panel-body -->
         </div>
+        <!-- /.panel -->
     </div>
+</div>
 
-    <!-- TOP EMPLOYEES -->
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    En Çok Çalışan 5 Kişi
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-bar-chart-o fa-fw"></i>  Tarih Aralığına Ait Departman Grafiği
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div id="result"></div>
+                <div class="tab-content" id="myTabContent">
+                    <h4 class="card-title text-center font-weight-bold"></h4>
+                    <label id="selectedWeekRange" class="week-range-label"></label>
+                    <div style="float:right;margin-top:-35px">
+                        <button class="btn btn-outline btn-blue-light" id='prevButton'>Prev</button>&nbsp;
+
+                        <button class="btn btn-outline btn-blue-light" id='nextButton'>Next</button>
+                    </div>
+
+
+                    <div id="chart-container">
+
+                        <div id="department_chart_div"></div>
+
+
+                    </div>
                 </div>
-                <div class="card-body">
-                    <table id="employeeTable" class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>İsim Soyisim</th>
-                                <th>Toplam Çalışma Saati</th>
-                                <th>Hafta İçi</th>
-                                <th>Hafta Sonu</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- JS ile dolacak -->
-                        </tbody>
-                    </table>
+                <div class="tab-pane fade" id="employee" role="tabpanel" aria-labelledby="employee-tab">
+                    <h4 class="card-title">Tarih Aralığına Ait Tek Çalışan Grafiği</h4>
+                    <label id="selectedWeekRange" class="week-range-label"></label>
                 </div>
+            </div>
+
+        </div>
+        @*/.panel-body*@
+    </div>
+    @*/.panel*@
+</div>
+
+<div class="row">
+    <div class="col-xl-3">
+        <div class="panel panel-default">
+            <div class="panel-heading" id="panel-heading">
+                <i class="fa fa-bar-chart-o fa-fw"></i>
+                <span id="department-heading">Departman seçin</span> ait en çok çalışan 5 kişi
+            </div>
+            <div class="panel-body">
+                @*<h4 class="card-title">Ayın En Çok Mesai Yapan 5 Çalışanı</h4>
+                <p>Aylık Ortalama Saat</p>
+
+                <div id="bestpersonalchart_div" style="width:900px; height:500px;"></div>*@
+
+                <table id="employeeTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>İsim Soyisim</th>
+                            <th>Toplam Çalışma Saati</th>
+                            <th>Hafta İçi Çalışma Saati</th>
+                            <th>Hafta Sonu Çalışma Saati</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+
             </div>
         </div>
     </div>
 </div>
+
+
+
+<div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="infoModalLabel">Seçilen Bilgi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table id="employeesTable" class="display table table-responsive">
+                    <thead>
+                        <tr>
+                            <th>Ad Soyad</th>
+                            <th>Giriş Kayıt</th>
+                            <th>Çıkış Kayıt</th>
+                            <th>Çalışma Süresi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableContent">
+                        <!-- Veri buraya gelecek -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button> -->
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="lateDaysModal" tabindex="-1" role="dialog" aria-labelledby="lateDaysModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="lateDaysModalLabel">Geç Kalan Günler - <span id="employeeName"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Toplam Geç Kaldığı Gün Sayısı: <span id="lateDays"></span></p>
+                <p>Geç Kaldığı Günler:</p>
+                <ul id="lateRecords">
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="float:right;margin-right:20px;">
+    <button style="width:50px;height:50px" type="button" class="btn btn-secondary" id="scrollToTopButton" onclick="scrollToTop()"><i class="fa fa-turn-up"></i></button>
+</div>
+
+<script>
+    // Aktarbtn düğmesini seçiyoruz
+    var aktarbtn = document.getElementById('aktarbtn');
+    // Sayfa kaydırıldığında bu fonksiyon çalışacak
+    window.onscroll = function () {
+        // Yatay ve dikey kaydırma miktarını al
+        var yScrollPos = window.scrollY;
+        var xScrollPos = window.scrollX;
+        // Düğmenin konumunu sayfa hareketiyle güncelle
+        aktarbtn.style.transform = 'translate(' + xScrollPos + 'px, ' + yScrollPos + 'px)';
+    };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js"></script>
+<script>
+    function aktar() {
+        var startdate = document.getElementById("date-input-vpn").value;
+        var enddate = document.getElementById("date-input-vpn2").value;
+
+        $.ajax({
+            url: '/PersonnalTracking/PerformanceByEmployee',
+            type: 'GET',
+            data: {
+                startdate: startdate,
+                enddate: enddate
+            },
+            success: function (response) {
+                // Başarılı olursa, kullanıcıyı yeni sayfaya yönlendir
+                window.location.href = '/PersonnalTracking/PerformanceByEmployee?startDate=' + startdate + '&endDate=' + enddate;
+            },
+            error: function (error) {
+                console.log("Error: ", error);
+            }
+        });
+    }
+
+</script>
+<script type="text/javascript">
+    $("input").on("change", function () {
+        this.setAttribute(
+            "data-date",
+            moment(this.value, "YYYY-MM-DD")
+                .format(this.getAttribute("data-date-format"))
+        )
+    }).trigger("change")
+
+    document.getElementById('date-input-vpn').value = jsGetDate(-30);
+    document.getElementById('date-input-vpn2').value = jsGetDate();
+
+
+
+</script>
+<script>
+    function showLateDaysModal(employeeName, lateDays, lateRecords) {
+        $('#employeeName').text(employeeName);
+        $('#lateDays').text(lateDays);
+        var lateRecordsHtml = lateRecords.map(record => `<li>${record}</li>`).join('');
+        $('#lateRecords').html(lateRecordsHtml);
+        $('#lateDaysModal').modal('show');
+    }</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const chartWidgets = document.querySelectorAll('.chart-widget');
+        const overlay = document.getElementById('overlay');
+        const chartContainer = document.getElementById('chart-container');
+
+        chartWidgets.forEach(widget => {
+            widget.addEventListener('click', function () {
+                // Küçük widget'ı gizle
+                widget.style.display = 'none';
+
+                // Büyük widget'ın boyutunu al
+                const widgetWidth = this.offsetWidth;
+                const widgetHeight = this.offsetHeight;
+
+                // Büyük chart container'ın boyutunu ayarla
+                chartContainer.style.width = widgetWidth + 'px';
+
+                // Gelen data miktarına göre yükseklik ayarla
+                const numRows = widget.dataset.numRows; // Veri satır sayısını aldığınız değişken
+                let newHeight = numRows * 40; // Her veri için 40px yükseklik ekle
+                newHeight = Math.min(newHeight, 800); // Maksimum 800px olarak sınırla
+
+                chartContainer.style.height = newHeight + 'px';
+
+                // Mevcut chart'ı kaldır
+                while (chartContainer.firstChild) {
+                    chartContainer.removeChild(chartContainer.firstChild);
+                }
+
+                // Yeni bir chart oluştur ve büyük chart container'a ekle
+                const newChart = document.createElement('div');
+                newChart.id = 'departmentcount_chart_div';
+                newChart.style.width = '100%';
+                newChart.style.height = '100%';
+                chartContainer.appendChild(newChart);
+
+                // Overlay'ı aktif hale getir
+                overlay.classList.add('active');
+            });
+        });
+    });
+</script>
+
+
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+@*<script src="~/Content/libs/personnalTrackingjs/google.js"></script>*@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdn.rawgit.com/xsoh/moment-hijri/master/moment-hijri.js"></script>
+<script>
+    function scrollToTop() {
+        // Sayfanın başına scroll et
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        var chartDiv = document.getElementById('department_chart_div');
+        chartDiv.scrollTop -= 100;
+        // Chart container elementini al
+
+    }
+
+</script>
+<script>
+    @*departmentcount_chart_div*@
+        google.charts.load('current', { packages: ['corechart'] });
+
+    var selectedDepartment = "";
+    document.getElementById('submitButton-Vpn').addEventListener('click', function () {
+        var chartDiv = document.getElementById('departmentcount_chart_div');
+        $("#departmentcount_chart_div").empty();
+        var startDate = document.getElementById('date-input-vpn').value;
+        var endDate = document.getElementById('date-input-vpn2').value;
+
+        var startDateObj = new Date(startDate);
+        var endDateObj = new Date(endDate);
+
+        if (endDateObj < startDateObj) {
+            alert("Bitiş tarihi, başlangıç tarihinden küçük olamaz!");
+            return;
+        }
+
+        var controllerUrl = '/PersonnalTracking/GetOfficeAndVpnDates?startDate=' + startDate + '&endDate=' + endDate + '&departmentId=' + selectedDepartment;
+
+        fetch(controllerUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json())
+            .then(data => {
+                var chartDataMap = new Map();
+
+                data.data.forEach(entry => {
+                    var date = new Date(entry.officeDate || entry.remoteDate).toLocaleDateString();
+
+                    if (!chartDataMap.has(date)) {
+                        chartDataMap.set(date, {
+                            officeDate: entry.officeDate || null,
+                            remoteDate: entry.remoteDate || null,
+                            officeCount: 0,
+                            remoteCount: 0,
+                            departmentCount: 0,
+                            remoteEntries: []
+                        });
+                    }
+
+                    if (entry.remoteDate) {
+                        chartDataMap.get(date).remoteCount++;
+                    } else {
+                        chartDataMap.get(date).officeCount++;
+                    }
+
+                    chartDataMap.get(date).remoteEntries.push({
+                        fullName: entry.fullName,
+                        isRemote: entry.remoteDate !== null,
+                        officeStartDate: entry.officeStartDate,
+                        officeEndDate: entry.officeEndDate,
+                        vpnStartDate: entry.vpnStartDate,
+                        vpnEndDate: entry.vpnEndDate,
+                        department: entry.department
+                    });
+                });
+
+                var chartDataArray = Array.from(chartDataMap.entries()).map(([date, counts]) => ({
+                    date: counts.officeDate != null ? counts.officeDate : counts.remoteDate,
+                    officeCount: counts.officeCount,
+                    remoteCount: counts.remoteCount,
+                    remoteEntries: counts.remoteEntries,
+                    departmentCount: counts.departmentCount,
+                })).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                drawOfficeRemoteChart(chartDataArray, startDate, endDate);
+            })
+            .catch(error => {
+                console.error('Veri alınamadı:', error);
+            });
+    });
+
+    function drawOfficeRemoteChart(chartDataArray, startDate, endDate) {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Tarih');
+        data.addColumn('number', 'Ofiste Çalışanlar');
+        data.addColumn('number', 'Evden Çalışanlar');
+
+        chartDataArray.forEach(entry => {
+            var date = new Date(entry.date);
+            var formattedDate = date.toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' });
+            data.addRow([formattedDate, entry.officeCount, entry.remoteCount]);
+        });
+
+        var options = {
+            title: 'Tarih Bazında Ofiste ve Evden Çalışanlar',
+            hAxis: {
+                title: 'Tarih',
+                slantedText: true,
+                slantedTextAngle: 90,
+            },
+            vAxis: {
+                title: 'Çalışan Sayısı'
+            },
+            colors: ['#833ab4', '#F27121'],
+            series: {
+                0: { type: 'bars' },
+                1: { type: 'bars' },
+            },
+            legend: { position: 'top' }
+        };
+
+        var chart = new google.visualization.ComboChart(document.getElementById('departmentcount_chart_div'));
+
+        google.visualization.events.addListener(chart, 'select', function () {
+            var selection = chart.getSelection();
+            var selectedItem = selection[0];
+            if (selectedItem) {
+                var selectedDate = data.getValue(selectedItem.row, 0);
+                var officeHours = data.getValue(selectedItem.row, 1);
+                var vpnHours = data.getValue(selectedItem.row, 2);
+                var remoteEntries = chartDataArray[selectedItem.row].remoteEntries;
+                var columnIndex = selectedItem.column;
+                showDetailsModal(selectedDate, officeHours, vpnHours, remoteEntries, startDate, endDate, columnIndex);
+            }
+        });
+
+        chart.draw(data, options);
+    }
+
+    function showDetailsModal(selectedDate, officeHours, vpnHours, remoteEntries, startDate, endDate, columnIndex) {
+        var formattedOfficeHours = officeHours ? officeHours.toFixed(2) : '0.00';
+        var formattedVpnHours = vpnHours ? vpnHours.toFixed(2) : '0.00';
+        var formattedDate = selectedDate;
+
+        var modalContent = `
+                <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="detailsModalLabel">${formattedDate} - Detaylar</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <ul class="nav nav-tabs" id="detailsTab" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link ${columnIndex === 1 ? 'active' : ''}" id="modal-office-tab" data-toggle="tab" href="#modal-office" role="tab" aria-controls="modal-office" aria-selected="${columnIndex === 1}">Ofis Çalışması</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link ${columnIndex === 2 ? 'active' : ''}" id="modal-vpn-tab" data-toggle="tab" href="#modal-vpn" role="tab" aria-controls="modal-vpn" aria-selected="${columnIndex === 2}">Uzaktan Çalışma</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link ${columnIndex === 3 ? 'active' : ''}" id="modal-department-tab" data-toggle="tab" href="#modal-department" role="tab" aria-controls="modal-department" aria-selected="${columnIndex === 3}">Departman Çalışması</a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" id="detailsTabContent">
+                                    <div class="tab-pane fade ${columnIndex === 1 ? 'show active' : ''}" id="modal-office" role="tabpanel" aria-labelledby="modal-office-tab">
+                                        <h5>Ofiste Çalışanlar: ${formattedOfficeHours}</h5>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>İsim</th>
+                                                    <th>Ofis Giriş Saati</th>
+                                                    <th>Ofis Çıkış Saati</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${remoteEntries.filter(entry => !entry.isRemote).map(entry => `
+                                                    <tr>
+                                                        <td>${entry.fullName}</td>
+                                                        <td>${entry.officeStartDate ? new Date(entry.officeStartDate).toLocaleTimeString('tr-TR') : '-'}</td>
+                                                        <td>${entry.officeEndDate ? new Date(entry.officeEndDate).toLocaleTimeString('tr-TR') : '-'}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="tab-pane fade ${columnIndex === 2 ? 'show active' : ''}" id="modal-vpn" role="tabpanel" aria-labelledby="modal-vpn-tab">
+                                        <h5>Uzaktan Çalışanlar: ${formattedVpnHours}</h5>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>İsim</th>
+                                                    <th>VPN Giriş Saati</th>
+                                                    <th>VPN Çıkış Saati</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${remoteEntries.filter(entry => entry.isRemote).map(entry => `
+                                                    <tr>
+                                                        <td>${entry.fullName}</td>
+                                                        <td>${entry.vpnStartDate ? new Date(entry.vpnStartDate).toLocaleTimeString('tr-TR') : '-'}</td>
+                                                        <td>${entry.vpnEndDate ? new Date(entry.vpnEndDate).toLocaleTimeString('tr-TR') : '-'}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="tab-pane fade ${columnIndex === 3 ? 'show active' : ''}" id="modal-department" role="tabpanel" aria-labelledby="modal-department-tab">
+                                        <h5>Departmana Göre Özet Bilgi</h5>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Departman</th>
+                                                    <th>Ofiste Çalışanlar</th>
+                                                    <th>Evden Çalışanlar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${getDepartmentCounts(remoteEntries).map(entry => `
+                                                    <tr>
+                                                        <td>${entry.department}</td>
+                                                        <td>${entry.officeCount}</td>
+                                                        <td>${entry.remoteCount}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        $('#detailsModal').remove(); // Remove any existing modal with the ID `detailsModal`
+        $('body').append(modalContent); // Append the modal content to the body
+
+        $('#detailsModal').modal('show'); // Show the modal
+
+        // Initialize DataTables for the tables inside the modal
+        $('#modal-office table').DataTable({
+            language: {
+                "url": "/Content/Turkish.json"
+            }
+        });
+
+        $('#modal-vpn table').DataTable({
+            language: {
+                "url": "/Content/Turkish.json"
+            }
+        });
+
+        $('#modal-department table').DataTable({
+            language: {
+                "url": "/Content/Turkish.json"
+            }
+        });
+
+        // Show the correct tab based on the columnIndex
+        if (columnIndex === 1) {
+            $('#modal-office-tab').tab('show');
+        } else if (columnIndex === 2) {
+            $('#modal-vpn-tab').tab('show');
+        } else if (columnIndex === 3) {
+            $('#modal-department-tab').tab('show');
+        }
+    }
+
+    function getDepartmentCounts(remoteEntries) {
+        var departmentMap = new Map();
+
+        remoteEntries.forEach(entry => {
+            var department = entry.department;
+
+            if (!departmentMap.has(department)) {
+                departmentMap.set(department, {
+                    department: department,
+                    officeCount: 0,
+                    remoteCount: 0
+                });
+            }
+
+            if (!entry.isRemote) {
+                departmentMap.get(department).officeCount++;
+            } else {
+                departmentMap.get(department).remoteCount++;
+            }
+        });
+
+        return Array.from(departmentMap.values());
+    }
+
+    function selectDepartment(department) {
+        selectedDepartment = department;
+    }
+</script>
+
+
+
+<script>
+
+
+    function getRamadanBayramDates(year) {
+        let hijriYear = moment(year + '-01-01').iYear();
+        let ramadanStart = moment(`${hijriYear}-09-01`, 'iYYYY-iMM-iDD').startOf('iMonth').add(29, 'days').format('YYYY-MM-DD');
+        let ramadanEnd = moment(ramadanStart).add(2, 'days').format('YYYY-MM-DD');
+        return [ramadanStart, moment(ramadanStart).add(1, 'days').format('YYYY-MM-DD'), ramadanEnd];
+    }
+
+    function getKurbanBayramDates(year) {
+        let hijriYear = moment(year + '-01-01').iYear();
+        let kurbanStart = moment(`${hijriYear}-12-10`, 'iYYYY-iMM-iDD').format('YYYY-MM-DD');
+        let kurbanEnd = moment(kurbanStart).add(3, 'days').format('YYYY-MM-DD');
+        return [kurbanStart, moment(kurbanStart).add(1, 'days').format('YYYY-MM-DD'), moment(kurbanStart).add(2, 'days').format('YYYY-MM-DD'), kurbanEnd];
+    }
+
+    function getFullHolidays(year) {
+        // Sabit tatiller ve dinamik tatilleri birleştir
+        const fixedHolidays = [`${year}-01-01`, `${year}-04-23`, `${year}-05-01`, `${year}-05-19`, `${year}-07-15`, `${year}-08-30`, `${year}-10-29`];
+        const ramadanBayram = getRamadanBayramDates(year);
+        const kurbanBayram = getKurbanBayramDates(year);
+        return fixedHolidays.concat(ramadanBayram, kurbanBayram);
+    }
+
+    function getWorkingDaysAndHours(startDate, endDate, fullHolidays, halfHolidays, dailyWorkingHours) {
+        let start = new Date(startDate);
+        let end = new Date(endDate);
+        let workingDays = 0;
+        let totalWorkingHours = 0;
+
+        // Tarihler arasında döngü
+        for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+            let dayOfWeek = date.getDay();
+            let isFullHoliday = fullHolidays.some(holiday => new Date(holiday).getTime() === date.getTime());
+            let isHalfHoliday = halfHolidays.some(holiday => new Date(holiday).getTime() === date.getTime());
+
+            // Cumartesi (6) ve Pazar (0) günlerini çıkar
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                if (isFullHoliday) {
+                    // Tam tatil günleri
+                    continue;
+                } else if (isHalfHoliday) {
+                    // Yarım tatil günleri
+                    workingDays += 0.5;
+                    totalWorkingHours += dailyWorkingHours / 2;
+                } else {
+                    // Normal iş günleri
+                    workingDays++;
+                    totalWorkingHours += dailyWorkingHours;
+                }
+            }
+        }
+
+        return { workingDays, totalWorkingHours };
+    }
+
+    document.getElementById('submitButton-Vpn').addEventListener('click', function () {
+        let startDate = document.getElementById('date-input-vpn').value;
+        let endDate = document.getElementById('date-input-vpn2').value;
+        let dailyWorkingHours = 9.5; // Günlük çalışma saati
+        let startYear = new Date(startDate).getFullYear();
+        let endYear = new Date(endDate).getFullYear();
+
+        // Başlangıç ve bitiş tarihleri aynı yıla ait olmalıdır.
+        if (startYear !== endYear) {
+            document.getElementById('result').innerHTML = "Başlangıç ve bitiş tarihleri aynı yıla ait olmalıdır.";
+            return;
+        }
+
+        let fullHolidays = getFullHolidays(startYear); // Tam gün tatiller
+        let halfHolidays = ['']; // Yarım gün tatiller
+
+        if (startDate && endDate) {
+            let { workingDays, totalWorkingHours } = getWorkingDaysAndHours(startDate, endDate, fullHolidays, halfHolidays, dailyWorkingHours);
+            let averageWorkingHours = totalWorkingHours / workingDays;
+
+            document.getElementById('result').innerHTML =
+                "İş günleri: " + workingDays.toFixed(1) + "<br>" +
+                "Toplam çalışma saatleri: " + totalWorkingHours.toFixed(2) + "<br>" +
+                "Ortalama günlük çalışma saati: " + averageWorkingHours.toFixed(2);
+        } else {
+            document.getElementById('result').innerHTML = "Lütfen başlangıç ve bitiş tarihlerini girin.";
+        }
+    });
+</script>
+
+<script type="text/javascript">
+    google.charts.load('current', { packages: ['corechart'] });
+
+    var selectedDepartment = '';
+    var selectedUserId = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('submitButton-Vpn').addEventListener('click', function () {
+            var startDate = document.getElementById('date-input-vpn').value;
+            var endDate = document.getElementById('date-input-vpn2').value;
+            var employeeDropdown = document.getElementById('employeeDropdown');
+            var selectedEmployeeIds = [];
+
+            if (employeeDropdown && employeeDropdown.selectedOptions) {
+                selectedEmployeeIds = Array.from(employeeDropdown.selectedOptions)
+                    .map(option => option.value);
+            }
+            var controllerUrl = '/PersonnalTracking/GetAllEmployeesWithParams?startDate=' + startDate + '&endDate=' + endDate + '&departmentId=' + selectedDepartment;
+
+            if (selectedEmployeeIds.length > 0) {
+                // Eğer seçili çalışan varsa, her bir çalışan için istekte bulun
+                var requests = selectedEmployeeIds.map(employeeId =>
+                    fetch('/PersonnalTracking/GetAllEmployeesWithParams?startDate=' + startDate + '&endDate=' + endDate + '&Id=' + employeeId, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    }).then(response => response.json())
+                );
+
+                // Tüm istekler tamamlandığında verileri birleştir
+                Promise.all(requests).then(responses => {
+                    var allData = responses.flatMap(response => response.data);
+                    processChartData(allData, startDate, endDate);
+                }).catch(error => {
+                    console.error('Veri alınamadı:', error);
+                });
+            } else {
+                // Eğer seçili çalışan yoksa, sadece genel veri isteğinde bulun
+                fetch(controllerUrl, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                }).then(response => response.json())
+                    .then(data => {
+                        processChartData(data.data, startDate, endDate);
+                    })
+                    .catch(error => {
+                        console.error('Veri alınamadı:', error);
+                    });
+            }
+        });
+    });
+
+    function timeStringToHours(timeString) {
+        const [hours, minutes, seconds] = timeString.split(':').map(Number);
+        return hours + minutes / 60 + seconds / 3600;
+    }
+
+    function calculateHours(timeString) {
+        if (!timeString) {
+            return 0;
+        }
+        var timeArray = timeString.split(":");
+        return parseFloat(timeArray[0]) + parseFloat(timeArray[1]) / 60 + parseFloat(timeArray[2]) / 3600;
+    }
+
+    function calculateLateDaysForEachEmployee(data) {
+        var lateDaysMap = new Map();
+        var lateRecordsMap = new Map();
+
+        data.forEach(entry => {
+            var employeeName = entry.name + " " + entry.surName;
+            var lateDays = lateDaysMap.get(employeeName) || 0;
+            var firstRecordTime = new Date(entry.firstRecord).getHours() + (new Date(entry.firstRecord).getMinutes() / 60);
+            var vpnFirstRecordTime = new Date(entry.vpnFirstRecord).getHours() + (new Date(entry.vpnFirstRecord).getMinutes() / 60);
+            if (firstRecordTime > 8.5 || vpnFirstRecordTime > 8.5) {
+                lateDays++;
+                var lateRecords = lateRecordsMap.get(employeeName) || [];
+                lateRecords.push(entry.firstRecord, entry.vpnFirstRecord);
+                lateRecordsMap.set(employeeName, lateRecords);
+            }
+            lateDaysMap.set(employeeName, lateDays);
+        });
+
+        return lateDaysMap;
+    }
+
+    function processChartData(data, startDate, endDate) {
+        var lateDaysMap = calculateLateDaysForEachEmployee(data);
+
+        var chartDataMap = new Map();
+        data.forEach(entry => {
+            var employeeName = entry.name + " " + entry.surName;
+            if (!chartDataMap.has(employeeName)) {
+                chartDataMap.set(employeeName, {
+                    remoteEmployeeId: entry.remoteEmployeeId,
+                    officeHours: [],
+                    vpnHours: [],
+                    dates: new Set(),
+                    officeDates: new Set(),
+                    vpnDates: new Set(),
+                });
+            }
+            var employeeData = chartDataMap.get(employeeName);
+            employeeData.remoteEmployeeId = entry.remoteEmployeeId;
+            if (entry.workingHour) {
+                employeeData.officeHours.push(calculateHours(entry.workingHour));
+            }
+            if (entry.duration) {
+                employeeData.vpnHours.push(calculateHours(entry.duration));
+            }
+            employeeData.dates.add(entry.date);
+            if (entry.vpnDate) {
+                employeeData.dates.add(entry.vpnDate);
+            }
+            if (entry.firstRecord) {
+                employeeData.officeDates.add(entry.date);
+            }
+            if (entry.vpnFirstRecord) {
+                employeeData.vpnDates.add(entry.vpnDate);
+            }
+        });
+
+        var chartData = Array.from(chartDataMap.entries()).map(([employeeName, hours]) => {
+            var totalDays = hours.dates.size || 0;
+            var officeDays = hours.officeDates.size || 0;
+            var vpnDays = totalDays - officeDays || 0;
+            return {
+                remoteEmployeeId: hours.remoteEmployeeId,
+                employeeName: `${employeeName} (TÇG: ${totalDays} gün)`,
+                officeHours: calculateAverageHours(hours.officeHours),
+                vpnHours: calculateAverageHours(hours.vpnHours),
+                lateDays: lateDaysMap.get(employeeName) || 0,
+                officeDays: officeDays,
+                vpnDays: vpnDays
+            };
+        });
+
+        chartData.sort((a, b) => (b.officeHours + b.vpnHours) - (a.officeHours + a.vpnHours));
+
+        var dataTable = new google.visualization.DataTable();
+        dataTable.addColumn('string', 'Employee');
+        dataTable.addColumn('number', 'Ofis Süresi (saat)');
+        dataTable.addColumn({ type: 'string', role: 'tooltip' });
+        dataTable.addColumn('number', 'VPN Süresi (saat)');
+        dataTable.addColumn({ type: 'string', role: 'tooltip' });
+        dataTable.addColumn('number', 'Geç Kaldığı Gün Sayısı');
+        dataTable.addColumn({ type: 'string', role: 'tooltip' });
+
+        chartData.forEach(entry => {
+            dataTable.addRow([
+                entry.employeeName,
+                entry.officeHours || 0,
+                `Ofis Süresi(saat): ${entry.officeHours.toFixed(2)}\nOfis Günleri: ${entry.officeDays}`,
+                entry.vpnHours || 0,
+                `VPN Süresi(saat): ${entry.vpnHours.toFixed(2)}\nVPN Günleri: ${entry.vpnDays}`,
+                entry.lateDays || 0,
+                `Geç Kaldığı Gün Sayısı: ${entry.lateDays}`
+            ]);
+        });
+        var numRows = dataTable.getNumberOfRows();  // Bu kodun dataTable oluşturulmadan önce çalışmadığından emin olun.
+        var barGroupWidth = Math.max(100 / numRows, 50); // Min bar genişliği %30
+
+        var options = {
+            title: 'Çalışanların Ofis ve VPN Süreleri ile Geç Kaldığı Gün Sayısı',
+            isStacked: true,
+            hAxis: {
+                title: 'Toplam Süreler (saat)',
+                minValue: 0
+            },
+            vAxis: {
+                title: 'Çalışanlar',
+                fontSize: 12
+            },
+            colors: ['#833ab4', '#F27121', '#E94057'],
+            tooltip: { isHtml: true },
+            bar: { groupWidth: /*barGroupWidth*/50 + '%' },
+            chartArea: { width: '70%', height: '70%' }
+        };
+
+        var chart = new google.visualization.BarChart(document.getElementById('department_chart_div'));
+
+        EnablePagination(chart, dataTable, options, 20, document.getElementById('prevButton'), document.getElementById('nextButton'));
+
+        google.visualization.events.addListener(chart, 'select', function () {
+            var selection = chart.getSelection();
+            if (selection.length > 0) {
+                var selectedItem = selection[0];
+                var selectedRowIndex = selectedItem.row;
+                var selectedUserId = chartData[selectedRowIndex].remoteEmployeeId;
+                $.ajax({
+                    url: '/PersonnalTracking/PerformanceByEmployee',
+                    type: 'GET',
+                    data: {
+                        startdate: startDate,
+                        enddate: endDate,
+                        employeeId: selectedUserId
+                    },
+                    success: function (response) {
+                        window.location.href = '/PersonnalTracking/PerformanceByEmployee?startdate=' + startDate + '&enddate=' + endDate + '&employeeId=' + selectedUserId;
+                    },
+                    error: function (error) {
+                        console.log("Error: ", error);
+                    }
+                });
+            }
+        });
+
+        chart.draw(dataTable, options);
+
+        var numRows = dataTable.getNumberOfRows();
+        const dataPointCount = numRows;
+        const pixelsPerDataPoint = 40;
+        const minHeight = 300;
+        const maxHeight = 800;
+        const dynamicHeight = Math.min(Math.max(dataPointCount * pixelsPerDataPoint, minHeight), maxHeight);
+
+        chartDiv.style.height = dynamicHeight + 'px';
+    }
+
+    function calculateAverageHours(hours) {
+        var totalHours = hours.reduce((sum, hour) => sum + hour, 0);
+        return hours.length > 0 ? totalHours / hours.length : 0;
+    }
+
+    function EnablePagination(chart, dataTable, options, pageSize, prevButton, nextButton) {
+        var currentPage = 0;
+
+        function drawChartPage() {
+            var start = currentPage * pageSize;
+            var end = Math.min(start + pageSize, dataTable.getNumberOfRows());
+
+            var pageData = new google.visualization.DataTable();
+            pageData.addColumn('string', 'Employee');
+            pageData.addColumn('number', 'Ofis Süresi (saat)');
+            pageData.addColumn({ type: 'string', role: 'tooltip' });
+            pageData.addColumn('number', 'VPN Süresi (saat)');
+            pageData.addColumn({ type: 'string', role: 'tooltip' });
+            pageData.addColumn('number', 'Geç Kaldığı Gün Sayısı');
+            pageData.addColumn({ type: 'string', role: 'tooltip' });
+
+            for (var i = start; i < end; i++) {
+                var row = [];
+                for (var j = 0; j < dataTable.getNumberOfColumns(); j++) {
+                    row.push(dataTable.getValue(i, j));
+                }
+                pageData.addRow(row);
+            }
+
+            chart.draw(pageData, options);
+        }
+
+        prevButton.addEventListener('click', function () {
+            if (currentPage > 0) {
+                currentPage--;
+                drawChartPage();
+            }
+        });
+
+        nextButton.addEventListener('click', function () {
+            if ((currentPage + 1) * pageSize < dataTable.getNumberOfRows()) {
+                currentPage++;
+                drawChartPage();
+            }
+        });
+
+        drawChartPage();
+    }
+</script>
+
+
+<script>
+    document.getElementById('submitButton-Vpn').addEventListener('click', function () {
+        // Aktif olan tabın grafiğini oluştur
+        if ($('#department-tab').hasClass('active')) {
+            // Departman tabı aktifse
+            createSecondChartForUser1(); // Departman grafiğini oluştur
+            // Çalışan grafiğini oluştur
+            $('#employee').removeClass('active show'); // Çalışan tabını gizle
+        } else if ($('#employee-tab').hasClass('active')) {
+            // Çalışan tabı aktifse
+            createSecondChartForUser(); // Çalışan grafiğini oluştur
+            // Departman grafiğini oluştur
+            $('#department').removeClass('active show'); // Departman tabını gizle
+        }
+    });</script>
+
+
+
+
+
+
+<script>
+
+    var selectedDepartment = '';
+    document.getElementById('submitButton-Vpn').addEventListener('click', function () {
+        var startDate = document.getElementById('date-input-vpn').value;
+        var endDate = document.getElementById('date-input-vpn2').value;
+        const departmentId = $('#departmentSelect').val();
+        var controllerUrl = =
+            `/PersonnalTracking/GetAllEmployeesWithParams` +
+            `?startDate=${encodeURIComponent(startDate)}` +
+            `&endDate=${encodeURIComponent(endDate)}` +
+            `&departmentId=${encodeURIComponent(departmentId || '')}`;
+
+
+        // Function to parse time string and convert it to hours
+        function timeStringToHours(timeString) {
+            const [hours, minutes, seconds] = timeString.split(':').map(Number);
+            return hours + minutes / 60 + seconds / 3600;
+        }
+
+        // Function to fetch and process the data
+        async function fetchEmployeeData() {
+            try {
+                // Perform the fetch request
+                const response = await fetch(controllerUrl);
+
+                // Check if the response is ok
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Parse the JSON response
+                const result = await response.json();
+
+                // Extract the data array from the result
+                const employees = result.data;
+
+                // Calculate the total working hours
+                let totalWorkingHours = 0;
+                let totalVisits = 0;
+                const uniqueEmployees = new Map();
+                employees.forEach(employee => {
+                    const workingTimeInHours = timeStringToHours(employee.toplamZaman);
+                    totalWorkingHours += workingTimeInHours;
+                    const totalZamanInHours = timeStringToHours(employee.toplamZaman);
+                    if (totalZamanInHours > 1) {
+                        totalVisits++;
+                    }
+                    if (!uniqueEmployees.has(employee.remoteEmployeeId)) {
+                        uniqueEmployees.set(employee.remoteEmployeeId, employee);
+                    }
+
+                });
+                const weightedAverageHoursPerVisit = totalWorkingHours / totalVisits;
+
+                // Update the HTML element with the total working hours
+                document.getElementById('GetDiscountAmount').innerText = weightedAverageHoursPerVisit.toFixed(2);
+                document.getElementById('GetCustomerAmountByStatutrue').innerText = totalWorkingHours.toFixed(2);
+                document.getElementById('GetCustomerAmount').innerText = uniqueEmployees.size;
+            } catch (error) {
+                // Log any errors
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Call the function to fetch and process the data
+        fetchEmployeeData();
+    });
+
+
+    function selectDepartment(department) {
+        selectedDepartment = department;
+    }
+</script>
+
+
+
+
+
+<script>
+    $(document).ready(function () {
+        // Sayfa yüklendiğinde başlığı "Tümü" olarak ayarla
+        updateHeading(null);
+
+        // Departman seçimi değiştiğinde başlığı güncelle
+        $('#departmentSelect').change(function () {
+            const departmentId = this.value;
+            updateHeading(departmentId);
+        });
+
+        // Butona tıklanınca tabloyu çiz
+        $('#submitButton-Vpn').click(function () {
+            drawTable();
+        });
+    });
+
+    function updateHeading(departmentId) {
+        const departmentName = $('#departmentSelect option:selected').text();
+        const headingText = departmentId ? `${departmentName} departmanına ait en çok çalışan 5 kişi` : "Departmana ait en çok çalışan 5 kişi";
+        document.getElementById('department-heading').textContent = headingText;
+    }
+
+    function drawTable() {
+        const selectedDateStr = $('#date-input-vpn').val();
+        const selectedDate = new Date(selectedDateStr);
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth() + 1;
+
+        const departmentId = $('#departmentSelect').val();
+        const selectedEmployees = $('#employeeDropdown').val();
+
+        const isEmployeeSelected = selectedEmployees && selectedEmployees.length > 0;
+
+        const url = isEmployeeSelected
+            ? '/PersonnalTracking/SelectedBestPersonalMonth'
+            : '/PersonnalTracking/BestPersonalMonth';
+
+        const data = isEmployeeSelected
+            ? { month, year, ids: selectedEmployees }
+            : { month, year, departmentId };
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            traditional: true, // array query paramları için gerekli
+            data: data,
+            success: function (response) {
+                if (response.success) {
+                    const tableData = response.data.map(personal => {
+                        const totalHours = convertDay(personal.averageHour);
+                        const weekendTotalHours = parseDuration(personal.weekendTotalHour);
+                        const weekdayTotalHours = parseDuration(personal.totalHour);
+
+                        return [
+                            personal.name,
+                            totalHours.toFixed(2),
+                            weekdayTotalHours.toFixed(2),
+                            weekendTotalHours.toFixed(2)
+                        ];
+                    });
+
+                    $('#employeeTable').DataTable({
+                        data: tableData,
+                        columns: [
+                            { title: "İsim Soyisim" },
+                            { title: "Toplam Çalışma Saati" },
+                            { title: "Hafta İçi Ortalama" },
+                            { title: "Hafta Sonu Ortalama" }
+                        ],
+                        order: [[1, 'desc']],
+                        destroy: true,
+                        paging: false,
+                        searching: false,
+                        info: false,
+                        lengthChange: false,
+                        language: {
+                            sEmptyTable: "Veri bulunamadı",
+                            sInfo: "_TOTAL_ kayıt içinden _START_ - _END_ arası görüntüleniyor",
+                            sInfoEmpty: "Kayıt yok",
+                            sInfoFiltered: "(veriler _MAX_ kayıt içerisinden filtrelendi)",
+                            sLoadingRecords: "Yükleniyor...",
+                            sProcessing: "İşleniyor...",
+                            sSearch: "Ara:",
+                            sZeroRecords: "Eşleşen kayıt bulunamadı",
+                            oPaginate: {
+                                sFirst: "İlk",
+                                sLast: "Son",
+                                sNext: "Sonraki",
+                                sPrevious: "Önceki"
+                            },
+                            oAria: {
+                                sSortAscending: ": artan sırala",
+                                sSortDescending: ": azalan sırala"
+                            }
+                        }
+                    });
+                } else {
+                    alert(response.errorMessage);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Hata:", error);
+            }
+        });
+    }
+
+    function parseDuration(duration) {
+        if (!duration) return 0;
+        const parts = duration.split(':');
+        const [hours, minutes, seconds] = parts.map(Number);
+        return hours + minutes / 60 + seconds / 3600;
+    }
+
+    function convertDay(timeString) {
+        if (!timeString) return 0;
+        if (!timeString.includes('.')) return parseDuration(timeString);
+
+        const [days, time] = timeString.split('.');
+        const [hours, minutes, seconds] = time.split(':').map(Number);
+        return (parseInt(days) * 24) + hours + (minutes / 60) + (seconds / 3600);
+    }
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        $('#employeeDropdown').select2({
+            placeholder: "Çalışanlar Seçin",
+            allowClear: true,
+            dropdownCssClass: "select2-scrollable-dropdown"
+        });
+    });
+
+</script>
+
+<script>
+    $(document).ready(function () {
+        loadDepartments();
+        loadEmployees();
+
+        $('#departmentSelect').on('change', function () {
+            const selectedDeptId = $(this).val();
+            filterEmployeesByDepartment(selectedDeptId);
+        });
+    });
+
+    function loadDepartments() {
+        $.getJSON("/PersonnalTracking/GetDepartments", function (res) {
+            const departments = res.data;
+            const $deptSelect = $('#departmentSelect');
+            $deptSelect.append(departments.map(d => `<option value="${d.id}">${d.name}</option>`));
+        });
+    }
+
+    function loadEmployees() {
+        $.getJSON("/PersonnalTracking/GetAllEmployee", function (res) {
+            window.allEmployees = res.data; // Tüm çalışanları globalde tut
+            renderEmployeeOptions(window.allEmployees);
+        });
+    }
+
+    function filterEmployeesByDepartment(departmentId) {
+        if (!departmentId) {
+            renderEmployeeOptions(window.allEmployees);
+            return;
+        }
+
+        const filtered = window.allEmployees.filter(e => e.departmentId == departmentId);
+        renderEmployeeOptions(filtered);
+    }
+
+    function renderEmployeeOptions(list) {
+        const $empSelect = $('#employeeSelect');
+        $empSelect.empty().append('<option value="">Tümü</option>');
+
+        list.forEach(emp => {
+            $empSelect.append(`<option value="${emp.id}">${emp.firstName} ${emp.lastName}</option>`);
+        });
+    }
+</script>
