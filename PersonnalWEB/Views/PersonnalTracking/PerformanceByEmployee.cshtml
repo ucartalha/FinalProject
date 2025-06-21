@@ -14,6 +14,11 @@ Personel Takip Sistemi / Grafikler / Kişi Bazlı Performans
     var employeeId = ViewBag.EmployeeId;
     var employees = ViewBag.Model;
 }
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="~/css/chart.css" rel="stylesheet" />
+}
 
 <style>
     .dropdown {
@@ -149,6 +154,7 @@ Personel Takip Sistemi / Grafikler / Kişi Bazlı Performans
 <script src="~/Content/libs/personnalTrackingjs/tracking-Chart.js"></script>
 <script src="https://www.gstatic.com/charts/loader.js"></script>
 <script src="~/js/personnaltracking/chart.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 
 <script>
     function showLateDaysModal(employeeName, lateDays, lateRecords) {
@@ -307,114 +313,123 @@ Personel Takip Sistemi / Grafikler / Kişi Bazlı Performans
 </script>
 
 <script>
-
+    /* ------------------------------------------------------------------
+       GLOBAL SEÇİMLER
+    ------------------------------------------------------------------ */
     window.selectedUserId = null;
     window.selectedEmployeeName = null;
 
-    $("#userDropdown3").on("click", ".dropdown-item", function (event) {
-        var target = $(this); // Tıklanan öğeyi referans al
-        $("#userDropdown3 .dropdown-item").removeClass("active");
-        target.addClass("active");
-        // Tıklanan öğenin üst öğesindeki data-id değerini al
-        selectedUserId = parseInt(target.attr("data-id"));
-        selectedEmployeeName = target.text().trim();
-        $('#userDropdown3').text(selectedEmployeeName); // Buton metnini güncelle
+    /* ------------------------------------------------------------------
+       DROPDOWN SEÇİMİ
+    ------------------------------------------------------------------ */
+    $('#userDropdown3').on('click', '.dropdown-item', function () {
+        $('#userDropdown3 .dropdown-item').removeClass('active');
+        $(this).addClass('active');
+
+        window.selectedUserId = +$(this).data('id');          // data-id
+        window.selectedEmployeeName = $(this).text().trim();
+        $('#userDropdown3').text(window.selectedEmployeeName);     // buton metni
     });
 
-    $('#fetchDataBtn').on('click', function () {
-        var startDate = document.getElementById('date-input-vpn').value;
-        var endDate = document.getElementById('date-input-vpn2').value;
-        if ($.fn.DataTable.isDataTable('#dataTable')) {
+    /* ------------------------------------------------------------------
+       BUTON TIKLAMA → VERİ GETİR + TABLO OLUŞTUR + MODAL GÖSTER
+    ------------------------------------------------------------------ */
+    $('#fetchDataBtn').on('click', async function () {
+
+        const startDate = $('#date-input-vpn').val();
+        const endDate = $('#date-input-vpn2').val();
+
+        if (!window.selectedUserId) { alert('Lütfen bir kullanıcı seçin.'); return; }
+        if (!startDate || !endDate) { alert('Lütfen tarih aralığı seçin.'); return; }
+
+        // Daha önce inşa edilmiş tablo varsa sil
+        if ($.fn.dataTable.isDataTable('#dataTable')) {
             $('#dataTable').DataTable().clear().destroy();
         }
-        if (!selectedUserId) {
-            alert('Lütfen bir kullanıcı seçin.');
-            return;
-        }
 
-        if (!startDate || !endDate) {
-            alert('Lütfen tarih aralığını seçin.');
-            return;
-        }
+        try {
+            const response = await $.getJSON('/PersonnalTracking/GetAllDetails', {
+                startDate, endDate, empId: window.selectedUserId
+            });
 
-        $.ajax({
-            url: '/PersonnalTracking/GetAllDetails',
-            method: 'GET',
-            data: {
-                startDate: startDate,
-                endDate: endDate,
-                empId: selectedUserId
-            },
-            success: function (response) {
-                // Modal içindeki tabloya verileri ekleyin
-                let tableBody = $('#dataTable tbody');
-                tableBody.empty(); // Önceki verileri temizle
+            if (!response.success) throw new Error(response.errorMessage);
 
-                response.data.forEach(function (item) {
-                    let row = `<tr>
-                        <td>${new Date(item.logDate).toLocaleString().split(" ")[0]}</td>
-                        <td>${item.firstName}</td>
-                        <td>${item.lastName}</td>
-                        <td>${item.group}</td>
-                        <td>${item.bytesout}</td>
-                        <td>${item.bytesin}</td>
-                        <td>${secondsToTime(item.duration)}</td>
-                        <td>${new Date(item.firstRecord).toLocaleString()}</td>
-                        <td>${new Date(item.lastRecord).toLocaleString()}</td>
-                    </tr>`;
-                    tableBody.append(row);
-                });
+            /* ----------------- TABLO VERİSİ ----------------- */
+            const rows = response.data.map(item => [
+                new Date(item.logDate).toLocaleDateString('tr-TR'),
+                item.firstName,
+                item.lastName,
+                item.group,
+                item.bytesout,
+                item.bytesin,
+                secondsToTime(item.duration),
+                new Date(item.firstRecord).toLocaleString('tr-TR'),
+                new Date(item.lastRecord).toLocaleString('tr-TR')
+            ]);
 
-                $('#dataTable').DataTable({
-                    language: {
-                        url: '/Content/Turkish.json'  // Türkçe dil dosyasının yolu
+            /* ----------------- DATATABLE -------------------- */
+            $('#dataTable').DataTable({
+                data: rows,
+                columns: [
+                    { title: 'Tarih' },
+                    { title: 'Ad' },
+                    { title: 'Soyad' },
+                    { title: 'Grup' },
+                    { title: 'Çıkış (bytes)' },
+                    { title: 'Giriş (bytes)' },
+                    { title: 'Süre' },
+                    { title: 'İlk Kayıt' },
+                    { title: 'Son Kayıt' }
+                ],
+                language: { url: '/Content/Turkish.json' },
+                dom: 'Bfrtip',
+                paging: false,
+                searching: false,
+                info: false,
+                buttons: [{
+                    extend: 'excelHtml5',
+                    filename: 'Calisanlar',
+                    title: null,
+                    autoFilter: true,
+                    className: 'btn btn-dark-green-1 text-white',
+                    text: 'Rapor Kaydet',
+                    customizeData: data => {
+                        data.body.forEach(r =>
+                            r.forEach((c, i) => r[i] = '\0' + c));
                     },
-                    dom: 'Bfrtip',
-                    buttons: [
-                        {
-                            extend: 'excelHtml5',
-                            filename: "Calisanlar ",
-                            title: null,
-                            autoFilter: true,
-                            className: 'btn btn-dark-green-1 text-white',
-                            text: 'Rapor Kaydet',
-                            customizeData: function (data) {
-                                for (var i = 0; i < data.body.length; i++) {
-                                    for (var j = 0; j < data.body[i].length; j++) {
-                                        data.body[i][j] = '\0' + data.body[i][j];
-                                    }
-                                }
-                            },
-                            action: function (e, dt, node, config) {
+                    action: function (e, dt, node, config) {
+                        ShowLoading();
+                        const that = this;
+                        setTimeout(() => {
+                            $.fn.dataTable.ext.buttons.excelHtml5.action
+                                .call(that, e, dt, node, config);
+                            HideLoading();
+                        }, 500);
+                    }
+                }]
+            });
 
+            /* ----------------- BOOTSTRAP 5 MODAL ------------- */
+            const modalEl = document.getElementById('dataModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
 
-                                ShowLoading();
-
-
-                                var that = this;
-
-
-                                setTimeout(function () {
-                                    $.fn.dataTable.ext.buttons.excelHtml5.action.call(that, e, dt, node, config);
-
-
-                                    HideLoading();
-
-
-                                }, 500);
-                            }
-                        }
-                    ]
-                });
-                // Modal'ı göster
-                $('#dataModal').modal('show');
-            },
-            error: function () {
-                alert('Veri alınırken bir hata oluştu.');
-            }
-        });
+        } catch (err) {
+            console.error(err);
+            alert('Veri alınamadı: ' + err.message);
+        }
     });
 
+    /* ------------------------------------------------------------------
+       YARDIMCI FONKSİYON
+    ------------------------------------------------------------------ */
+    function secondsToTime(sec) {
+        if (!sec) return '0:00:00';
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const s = sec % 60;
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
 </script>
 <script>
     function secondsToTime(seconds) {
@@ -432,4 +447,6 @@ Personel Takip Sistemi / Grafikler / Kişi Bazlı Performans
 
 <script src="~/js/personnaltracking/dailyemployeechart.js"></script>
 <script src="~/js/personnaltracking/employeechart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 

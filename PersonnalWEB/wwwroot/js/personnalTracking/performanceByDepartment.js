@@ -3,7 +3,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     loadDepartments();
     setDefaultDates();
-    document.getElementById("chartType").value = "google"; // Varsayılan Google Chart
+  
 
     document.getElementById("btnFilter")?.addEventListener("click", function () {
         const startDate = document.getElementById("startDate").value;
@@ -30,10 +30,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function setDefaultDates() {
     const now = new Date();
-    const past = new Date();
+    const past = new Date(now);
     past.setDate(now.getDate() - 30);
-    document.getElementById("startDate").value = past.toISOString().split('T')[0];
-    document.getElementById("endDate").value = now.toISOString().split('T')[0];
+
+    // Başlangıç (30 gün önce) ve bitiş (bugün)
+    document.getElementById("date-input-vpn").value = past.toISOString().split('T')[0];
+    document.getElementById("date-input-vpn2").value = now.toISOString().split('T')[0];
 }
 
 function loadDepartments() {

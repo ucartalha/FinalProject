@@ -13,8 +13,8 @@ namespace Entities.Concrete
         public int Id { get; set; } 
         public string FirstName { get; set; } // Ad
         public string LastName { get; set; } // Soyad
-        public string UserName { get; set; }
-        public string Email { get; set; } // E-posta
+        public string? UserName { get; set; }
+        public string? Email { get; set; } // E-posta
         public int? DepartmentId { get; set; } // Departman kimliği (ilişki)
         public Department Department { get; set; } // Departman ile ilişki
         public virtual ICollection<EmployeeRecord> EmployeeRecords { get; set; }

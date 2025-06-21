@@ -225,81 +225,63 @@ function drawDailyEmployeeChart(chartDataArray, startDate, endDate, totalLateDay
 
 
 function showDetailsModal(selectedDate, officeHours, vpnHours, lateDays, startDate, endDate) {
-    // Ofis süresi için saat formatını düzenle
-    var formattedOfficeHours = officeHours.toFixed(2);
-    // VPN süresi için saat formatını düzenle
-    var formattedVpnHours = vpnHours ? vpnHours.toFixed(2) : '0.00'; // VPN süresi undefined ise '0.00' olarak belirtilir
+    // 1) Süreleri ve URL’i hazırla
+    const formattedOfficeHours = officeHours.toFixed(2);
+    const formattedVpnHours = vpnHours ? vpnHours.toFixed(2) : '0.00';
+    const controllerUrl = `/PersonnalTracking/GetAllEmployeesWithParams?startDate=${startDate}&endDate=${endDate}&Id=${selectedUserId}`;
 
-    // Tarih formatını ayarla
-    var formattedDate = new Date(selectedDate).toLocaleDateString();
-    var controllerUrl = '/PersonnalTracking/GetAllEmployeesWithParams?startDate=' + startDate + '&endDate=' + endDate + '&Id=' + selectedUserId;
+    // 2) Sunucudan veriyi çek
+    fetch(controllerUrl)
+        .then(res => res.json())
+        .then(({ data }) => {
+            // 3) İlgili kaydı bul
+            const cleanSelectedDate = selectedDate.replace(' (H.S)', '').trim();
+            const details = data.find(entry => {
+                const entryDate = entry.date
+                    ? new Date(entry.date).toLocaleDateString('tr-TR')
+                    : new Date(entry.vpnFirstRecord).toLocaleDateString('tr-TR');
 
-    fetch(controllerUrl, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    }).then(response => response.json())
-        .then(data => {
+                const vpnDateMatch = entry.vpnFirstRecord &&
+                    new Date(entry.vpnFirstRecord).toLocaleDateString('tr-TR') === cleanSelectedDate;
 
-            var details = data.data.find(entry => {
-                var entryDate = entry.date ? new Date(entry.date).toLocaleDateString('tr-TR') : new Date(entry.vpnFirstRecord).toLocaleDateString('tr-TR');
-
-                // "H.S" kısmını silmek için
-                var cleanSelectedDate = selectedDate.replace(' (H.S)', '').trim();
-
-                return entryDate === cleanSelectedDate ||
-                    (entry.vpnFirstRecord && new Date(entry.vpnFirstRecord).toLocaleDateString('tr-TR') === cleanSelectedDate);
+                return entryDate === cleanSelectedDate || vpnDateMatch;
             });
 
-            // Ofis ve VPN kayıtlarını formatla
-            var officeFirstRecord = details ? (details.firstRecord ? new Date(details.firstRecord).toLocaleTimeString() : '') : '';
-            var officeLastRecord = details ? (details.lastRecord ? new Date(details.lastRecord).toLocaleTimeString() : '') : '';
-            var vpnFirstRecord = details ? (details.vpnFirstRecord ? new Date(details.vpnFirstRecord).toLocaleTimeString() : '') : '';
-            var vpnLastRecord = details ? (details.vpnLastRecord ? new Date(details.vpnLastRecord).toLocaleTimeString() : '') : '';
-            // Ofis ve VPN kayıtlarını kontrol ederek formatla
-            officeFirstRecord = officeFirstRecord || 'Kayıt yok';
-            officeLastRecord = officeLastRecord || 'Kayıt yok';
-            vpnFirstRecord = vpnFirstRecord || 'Kayıt yok';
-            vpnLastRecord = vpnLastRecord || 'Kayıt yok';
+            // 4) Saatleri formatla (kayıt yoksa uyarı yaz)
+            const officeFirst = details?.firstRecord ? new Date(details.firstRecord).toLocaleTimeString('tr-TR') : 'Kayıt yok';
+            const officeLast = details?.lastRecord ? new Date(details.lastRecord).toLocaleTimeString('tr-TR') : 'Kayıt yok';
+            const vpnFirst = details?.vpnFirstRecord ? new Date(details.vpnFirstRecord).toLocaleTimeString('tr-TR') : 'Kayıt yok';
+            const vpnLast = details?.vpnLastRecord ? new Date(details.vpnLastRecord).toLocaleTimeString('tr-TR') : 'Kayıt yok';
 
-            var modalContent = `
-       <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
-           <div class="modal-dialog" role="document">
-           <div class="modal-content">
-              <div class="modal-header">
-               <h5 class="modal-title" id="detailsModalLabel">Detaylar - ${selectedDate}</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-              </button>
-              </div>
-              <div class="modal-body">
-              <p>Ofis Başlangıç Saati: ${officeFirstRecord}</p>
-              <p>Ofis Bitiş Saati: ${officeLastRecord}</p>
-              <p>VPN Başlangıç Saati: ${vpnFirstRecord}</p>
-              <p>VPN Bitiş Saati: ${vpnLastRecord}</p>
-              <p>Ofis Süresi: ${formattedOfficeHours} saat</p>
-               <p>VPN Süresi: ${formattedVpnHours} saat</p>
-              <p>Geç Kaldığı Gün Sayısı: ${lateDays}</p>
-              </div>
-              <div class="modal-footer">
-              
-              </div>
-          </div>
-          </div>
-       </div>
-       `;
-
-            // Modalı temizle
+            // 5) Eski modal varsa kaldır
             $('#detailsModal').remove();
 
-            // Modalı ekleyin
-            $('body').append(modalContent);
+            // 6) Modal HTML’ini oluştur ve sayfaya ekle
+            const modalHtml = `
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailsModalLabel">Detaylar – ${cleanSelectedDate}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Ofis Başlangıç Saati: ${officeFirst}</p>
+        <p>Ofis Bitiş Saati: ${officeLast}</p>
+        <p>VPN Başlangıç Saati: ${vpnFirst}</p>
+        <p>VPN Bitiş Saati: ${vpnLast}</p>
+        <p>Ofis Süresi: ${formattedOfficeHours} saat</p>
+        <p>VPN Süresi: ${formattedVpnHours} saat</p>
+        <p>Geç Kaldığı Gün Sayısı: ${lateDays}</p>
+      </div>
+    </div>
+  </div>
+</div>`;
+            $('body').append(modalHtml);
 
-            // Modalı göster
-            $('#detailsModal').modal('show');
+            // 7) Bootstrap 5 modal nesnesini oluştur ve göster
+            const modalEl = document.getElementById('detailsModal');
+            new bootstrap.Modal(modalEl).show();
         })
-        .catch(error => {
-            console.error('Detaylar alınamadı:', error);
-        });
+        .catch(err => console.error('Detaylar alınamadı:', err));
 }

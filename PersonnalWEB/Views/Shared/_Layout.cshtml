@@ -1,54 +1,50 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - PersonnalWEB</title>
 
-    <!-- Stil dosyaları -->
-    <link rel="stylesheet" href="~/css/bootstrap.min.css" />
+    <!-- ===== CSS (global) ===== -->
+    <!-- Bootstrap 5.3.7 CSS + SRI -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr"
+          crossorigin="anonymous" />
+
+    <!-- İkonlar / proje stil dosyaları -->
     <link rel="stylesheet" href="~/css/fontawesome.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/PersonnalWEB.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-    <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
-    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-
-    <!-- Küresel betikler -->
-    <script src="~/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-
-    @RenderSection("Styles", required: false)
+    @RenderSection("Styles", required: false)  @* Sayfa-özel CSS *@
 </head>
 <body>
-    <header>
-        @await Html.PartialAsync("_MainMenu")
-    </header>
+
+    @await Html.PartialAsync("_MainMenu")
 
     <div class="container">
-        <main role="main" class="pb-3">
-            @RenderSection("Breadcrumbs", required: false)
-            @RenderBody()
-        </main>
+        @RenderSection("Breadcrumbs", required: false)
+        @RenderBody()
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - PersonnalWEB -
-            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
+        <div class="container">&copy; 2025 – PersonnalWEB – <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a></div>
     </footer>
 
-    <!-- JavaScript dosyaları -->
-    <!-- 1) jQuery (tek sefer, en önde) -->
-   
-    <script src="~/js/bootstrap.bundle.min.js"></script> @* ya da CDN *@
+    <!-- ===== JS (global) ===== -->
+    <!-- 1) jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+    <!-- 2) Bootstrap JS bundle (Popper dâhil) – sürüm CSS ile aynı -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
+            crossorigin="anonymous"></script>
+
+    <!-- 3) Projenizin global JS’i -->
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-    @await RenderSectionAsync("Scripts", required: false)
+    <!-- 4) Sayfa-özel betikler (DataTables, Select2, moment vs.) -->
+    @RenderSection("Scripts", required: false)
 </body>
 </html>
